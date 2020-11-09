@@ -1,0 +1,6 @@
+gym==0.17.2
+h5py==2.10.0
+numpy==1.19.0
+opencv-python==4.3.0.36
+tensorboard==2.2.2
+torch==1.5.1
