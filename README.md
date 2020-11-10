@@ -54,3 +54,7 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 ## Supported Environments
 - Standard Gym Environments: https://github.com/openai/gym
 - DeepMind Control Suite: https://github.com/deepmind/dm_control
+
+## TODO
+- [ ] Benchmark each algorithm.
+- [ ] GRAC currently collapses because of the log probability from CEM method. Need investigation.
