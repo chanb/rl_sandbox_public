@@ -28,7 +28,7 @@ The following is the list of algorithms that this repository currently support:
 - Data-regularized Q (DrQ): https://arxiv.org/abs/2004.13649
 - AlgaeDICE: https://arxiv.org/abs/1912.02074
 - Discriminator Actor Critic (DAC): https://arxiv.org/abs/1809.02925
-- Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/1801.01290
+- Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973
 
 ## Replay Buffers
 The following is the list of supported experience replay:
@@ -57,4 +57,4 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 
 ## TODO
 - [ ] Benchmark each algorithm.
-- [ ] GRAC currently collapses because of the log probability from CEM method. Need investigation.
+- [X] GRAC is unstable with shared architecture... Need to move code from private repo...
