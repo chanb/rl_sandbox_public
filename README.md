@@ -60,7 +60,7 @@ Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. F
 
 ### Hopper-v2
 #### PPO
-![PPO](./benchmark_results/gt-ppo.png "PPO")
+![PPO](benchmark_results/gt-ppo.png "PPO")
 
 
 ## TODO
