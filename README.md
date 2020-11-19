@@ -44,7 +44,7 @@ You may extend the existing algorithms with auxiliary tasks:
 You can find examples for both PPO and SAC under the directory `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper`. To train an RL agent for MuJoCo Hopper task using PPO:
 ```
 cd ${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper
-python ppo_experiment.py
+python ppo_experiment.py --seed=1
 ```
 
 This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` directory. It keeps track of the experiment configuration, learning progress, and policies.
@@ -54,6 +54,11 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 ## Supported Environments
 - Standard Gym Environments: https://github.com/openai/gym
 - DeepMind Control Suite: https://github.com/deepmind/dm_control
+
+## Benchmarking Results
+Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. For every 5000 timesteps, we evaluate the agent in a separate copy of the environment and execute 5 trials. The plot displays the average returns and the standard deviation.
+
+
 
 ## TODO
 - [ ] Benchmark each algorithm in MuJoCo.
