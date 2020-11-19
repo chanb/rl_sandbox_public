@@ -56,10 +56,11 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 - DeepMind Control Suite: https://github.com/deepmind/dm_control
 
 ## Benchmarking Results
-Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. For every 5000 timesteps, we evaluate the agent in a separate copy of the environment and execute 5 trials. The plot displays the average returns and the standard deviation.
+Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. For every 5000 timesteps, we evaluate the agent in a separate copy of the environment and execute 5 trials. The plot displays the average returns and the standard deviation. To generate the plot, you may run the script `${RL_SANDBOX_PATH}/rl_sandbox/examples/plot_evaluations.py`
 
 ### Hopper-v2
 #### PPO
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/ppo_experiment.py`
 ![PPO](benchmark_results/gt-ppo.png "PPO")
 
 
