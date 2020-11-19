@@ -8,59 +8,29 @@ The config path consists of all the settings to load the environment
 and preprocessing.
 
 Example usage:
-python create_expert_data.py --seed=0 --model_path=./state_dict.pt \
+python evaluate.py --seed=0 --model_path=./state_dict.pt \
     --config_path=./experiment_setting.pkl --num_episodes=5
 """
 
 import _pickle as pickle
 import argparse
-import os
 import torch
 
 import rl_sandbox.constants as c
 
-from rl_sandbox.agents.hrl_agents import SACXAgent
-from rl_sandbox.agents.rl_agents import ACAgent
-from rl_sandbox.algorithms.sac_x.schedulers import FixedScheduler
-from rl_sandbox.envs.utils import make_env
+from rl_sandbox.examples.utils import load_model
 from rl_sandbox.learning_utils import evaluate_policy
-from rl_sandbox.model_architectures.utils import make_model
 from rl_sandbox.utils import set_seed
 
 
-def create_trajectories(args):
-    assert args.num_episodes > 0
-    assert os.path.isfile(args.model_path)
-    assert os.path.isfile(args.config_path)
-
+def evaluate(args):
     set_seed(args.seed)
-    with open(args.config_path, "rb") as f:
-        config = pickle.load(f)
+    assert args.num_episodes > 0
 
-    env_setting = config[c.ENV_SETTING]
-    env = make_env(env_setting, seed=args.seed)
-
-    buffer_preprocessing = config[c.BUFFER_PREPROCESSING]
-    if config[c.ALGO] == c.SACX:
-        intentions = make_model(config[c.INTENTIONS_SETTING])
-        intentions.load_state_dict(torch.load(args.model_path)[c.INTENTIONS][c.STATE_DICT])
-
-        agent = SACXAgent(scheduler=None,
-                          intentions=intentions,
-                          learning_algorithm=None,
-                          scheduler_period=config[c.MAX_EPISODE_LENGTH],
-                          preprocess=config[c.EVALUATION_PREPROCESSING])
-    else:
-        model = make_model(config[c.MODEL_SETTING])
-
-        saved_model = torch.load(args.model_path)
-        model.load_state_dict(saved_model[c.STATE_DICT])
-        if hasattr(model, c.OBS_RMS):
-            model.obs_rms = saved_model[c.OBS_RMS]
-        
-        agent = ACAgent(model=model,
-                        learning_algorithm=None,
-                        preprocess=config[c.EVALUATION_PREPROCESSING])
+    config, env, buffer_preprocessing, agent = load_model(args.seed,
+                                                          args.config_path,
+                                                          args.model_path,
+                                                          args.intention)
 
     (ret_mean, ret_std) = evaluate_policy(agent=agent,
                                           env=env,
@@ -82,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", required=True, type=str, help="The path to load the model")
     parser.add_argument("--config_path", required=True, type=str, help="The path to load the config that trained the model")
     parser.add_argument("--num_episodes", required=True, type=int, help="The maximum number of episodes")
+    parser.add_argument("--intention", type=int, default=0, help="The intention to use for SAC-X")
     args = parser.parse_args()
 
-    create_trajectories(args)
+    evaluate(args)

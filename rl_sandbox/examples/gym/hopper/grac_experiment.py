@@ -10,7 +10,7 @@ from rl_sandbox.buffers.wrappers.torch_buffer import TorchBuffer
 from rl_sandbox.envs.wrappers.action_repeat import ActionRepeatWrapper
 from rl_sandbox.envs.wrappers.frame_stack import FrameStackWrapper
 from rl_sandbox.train.train_grac import train_grac
-from rl_sandbox.model_architectures.actor_critics.fully_connected_q_actor_critic import FullyConnectedGaussianCEMQAC, FullyConnectedGaussianQAC
+from rl_sandbox.model_architectures.actor_critics.fully_connected_q_actor_critic import FullyConnectedGaussianQACSeparate, FullyConnectedGaussianCEMQAC, FullyConnectedGaussianQAC
 from rl_sandbox.model_architectures.layers_definition import VALUE_BASED_LINEAR_LAYERS
 
 # This is for script run
@@ -20,14 +20,12 @@ args = parser.parse_args()
 
 seed = args.seed
 
-# obs_dim = 15
 obs_dim = 11
 action_dim = 3
 min_action = -np.ones(action_dim)
 max_action = np.ones(action_dim)
 
 device = torch.device("cuda:0")
-# device = torch.device(c.CPU)
 
 action_repeat = 1
 num_frames = 1
@@ -72,7 +70,6 @@ experiment_setting = {
     c.ENV_SETTING: {
         c.ENV_BASE: {
             c.ENV_NAME: "Hopper-v2"
-            # c.ENV_NAME: "HopperBulletEnv-v0"
         },
         c.ENV_TYPE: c.GYM,
         c.ENV_WRAPPERS: [
@@ -129,7 +126,7 @@ experiment_setting = {
             c.DEVICE: device,
             c.NORMALIZE_OBS: False,
             c.NORMALIZE_VALUE: False,
-            # c.EPS: 1e-3,
+            # c.EPS: 1e-4,
         },
     },
     
@@ -145,7 +142,7 @@ experiment_setting = {
 
     # GRAC
     c.ACCUM_NUM_GRAD: 1,
-    c.ALPHA: 0.85,
+    c.ALPHA: 0.9,
     c.BATCH_SIZE: 256,
     c.BUFFER_WARMUP: 1000,
     c.COV_NOISE_END: 0.05,
@@ -154,13 +151,13 @@ experiment_setting = {
     c.ELITE_SIZE: 5,
     c.GAMMA: 0.99,
     c.MAX_GRAD_NORM: 1e10,
-    c.NUM_GRADIENT_UPDATES: 1,
+    c.NUM_GRADIENT_UPDATES: 20,
     c.NUM_ITERS: 2,
     c.NUM_PREFETCH: 1,
-    c.NUM_Q_UPDATES: 20,
+    c.NUM_Q_UPDATES: 5,
     c.POP_SIZE: 25,
     c.REWARD_SCALING: 1.,
-    c.STEPS_BETWEEN_UPDATE: 1,
+    c.STEPS_BETWEEN_UPDATE: 128,
     c.UPDATE_NUM: 0,
 
     # Progress Tracking
@@ -170,8 +167,7 @@ experiment_setting = {
     c.RETURNS: [0],
 
     # Save
-    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-grac-separate/{seed}",
-    # c.SAVE_PATH: None,
+    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-grac-shared/{seed}",
 
     # train parameters
     c.MAX_TOTAL_STEPS: max_total_steps,

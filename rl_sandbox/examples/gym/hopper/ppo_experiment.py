@@ -21,7 +21,6 @@ seed = args.seed
 
 obs_dim = 11
 action_dim = 3
-# device = torch.device(c.CPU)
 device = torch.device("cuda:0")
 
 action_repeat = 1
@@ -134,7 +133,7 @@ experiment_setting = {
     c.GAMMA: 0.99,
     c.MAX_GRAD_NORM: 1e10,
     c.NORMALIZE_ADVANTAGE: True,
-    c.OPT_BATCH_SIZE: 1024,
+    c.OPT_BATCH_SIZE: 64,
     c.OPT_EPOCHS: 10,
     c.PG_COEF: 1,
     c.TRAIN_PREPROCESSING: gt.Identity(),

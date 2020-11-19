@@ -56,5 +56,5 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 - DeepMind Control Suite: https://github.com/deepmind/dm_control
 
 ## TODO
-- [ ] Benchmark each algorithm.
-- [X] GRAC is unstable with shared architecture... Need to move code from private repo...
+- [ ] Benchmark each algorithm in MuJoCo.
+- [ ] Benchmark each algorithm in PyBullet.
