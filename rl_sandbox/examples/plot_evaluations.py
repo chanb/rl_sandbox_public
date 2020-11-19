@@ -43,7 +43,7 @@ def get_returns(root_dir, variants, file_name):
 def main(root_dir, variants, title, file_name="train.pkl", x_tick=5000):
     all_eval_rets = get_returns(root_dir, variants, file_name)
 
-    fig = plt.figure(figsize=(10, 5))
+    fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
     for idx, (variant, (ret_mean, ret_std, ret_min, ret_max)) in enumerate(all_eval_rets.items()):
         idx %= len(CB_color_cycle)

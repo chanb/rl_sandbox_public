@@ -58,6 +58,9 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 ## Benchmarking Results
 Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. For every 5000 timesteps, we evaluate the agent in a separate copy of the environment and execute 5 trials. The plot displays the average returns and the standard deviation.
 
+### Hopper-v2
+#### PPO
+![PPO](./benchmark_results/gt-ppo.png "PPO")
 
 
 ## TODO
