@@ -21,14 +21,12 @@ args = parser.parse_args()
 
 seed = args.seed
 
-# obs_dim = 15
 obs_dim = 11
 action_dim = 3
 min_action = -np.ones(action_dim)
 max_action = np.ones(action_dim)
 
 device = torch.device("cuda:0")
-# device = torch.device(c.CPU)
 
 action_repeat = 1
 num_frames = 1
@@ -73,7 +71,6 @@ experiment_setting = {
     c.ENV_SETTING: {
         c.ENV_BASE: {
             c.ENV_NAME: "Hopper-v2"
-            # c.ENV_NAME: "HopperBulletEnv-v0"
         },
         c.ENV_TYPE: c.GYM,
         c.ENV_WRAPPERS: [
@@ -123,7 +120,7 @@ experiment_setting = {
 
     # Model
     c.MODEL_SETTING: {
-        c.MODEL_ARCHITECTURE: FullyConnectedSquashedGaussianSAC,
+        c.MODEL_ARCHITECTURE: FullyConnectedSeparate,
         c.KWARGS: {
             c.OBS_DIM: obs_dim,
             c.ACTION_DIM: action_dim,
@@ -154,7 +151,7 @@ experiment_setting = {
     c.CRITIC_MIXTURE_RATIO: 0.05,
     c.GAMMA: 0.99,
     c.LEARN_ALPHA: False,
-    c.MAX_GRAD_NORM: 10,
+    c.MAX_GRAD_NORM: 1e10,
     c.NUM_GRADIENT_UPDATES: 1,
     c.NUM_PREFETCH: 1,
     c.P_NORM_EXP: p_norm,
@@ -171,9 +168,7 @@ experiment_setting = {
     c.RETURNS: [0],
 
     # Save
-    # c.SAVE_PATH: "../results/pybullet/hopper/gt-algaedice-algaealpha_1",
     c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-algaedice-pnorm_{p_norm}/{seed}",
-    # c.SAVE_PATH: None,
 
     # train parameters
     c.MAX_TOTAL_STEPS: max_total_steps,
