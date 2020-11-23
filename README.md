@@ -72,7 +72,7 @@ The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/h
 ![SAC-separate-alpha_0.2](benchmark_results/gt-sac-separate-alpha_0.2.png "SAC Fixed Alpha 0.2")
 
 #### AlgaeDICE (Fixed alpha = 0.2, p-norm = 1.5)
-The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/sac_fixed_alpha_experiment.py`
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/algaedice_experiment.py`
 ![AlgaeDICE-separate-alpha_0.2-pnorm_1.5](benchmark_results/gt-algaedice-pnorm_1.5.png "AlgaeDICE Fixed Alpha 0.2 P-Norm 1.5")
 
 
