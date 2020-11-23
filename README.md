@@ -79,3 +79,16 @@ The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/h
 ## TODO
 - [ ] Benchmark each algorithm in MuJoCo.
 - [ ] Benchmark each algorithm in PyBullet.
+
+## Citation
+Please consider citing this repository if you use/extend this codebase in your work:
+```
+@misc{rl_sandbox,
+  author = {Chan, Bryan},
+  title = {RL Sandbox},
+  year = {2020},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/chanb/rl_sandbox_public}},
+}
+```
