@@ -28,7 +28,7 @@ The following is the list of algorithms that this repository currently support:
 - Data-regularized Q (DrQ): https://arxiv.org/abs/2004.13649
 - AlgaeDICE: https://arxiv.org/abs/1912.02074
 - Discriminator Actor Critic (DAC): https://arxiv.org/abs/1809.02925
-- Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973
+- Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973 (NOTE: This is not well tested. The loss seems to explode sometimes... Why?)
 
 ## Replay Buffers
 The following is the list of supported experience replay:
