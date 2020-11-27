@@ -156,10 +156,10 @@ class QActorCritic(ActorCritic):
         return action, log_prob
 
     def act_stats(self, x, h, **kwargs):
-        dist, _, _ = self(x, h)
+        dist, val, _ = self(x, h)
         action = dist.rsample()
 
-        return action, dist.mean, dist.variance
+        return action, dist.mean, dist.variance, dist.entropy(), val
 
     def lprob(self, x, h, a, **kwargs):
         dist, _, _ = self(x, h)

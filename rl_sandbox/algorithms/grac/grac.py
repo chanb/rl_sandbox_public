@@ -139,7 +139,11 @@ class GRAC:
             _, q1_val, q2_val, next_h_states = self.model.q_vals(obss, h_states, acts, lengths=lengths)
 
             # Compute next actions with policy and CEM
-            next_acts_pi, next_acts_pi_mean, next_acts_pi_var = self.model.act_stats(next_obss, next_h_states)
+            next_acts_pi, next_acts_pi_mean, next_acts_pi_var, _, _ = self.model.act_stats(next_obss, next_h_states)
+
+            # NOTE: It is important to clip this action. Otherwise the Q-function gets OOD data
+            next_acts_pi = torch.clamp(next_acts_pi, min=self._min_action[0], max=self._max_action[0])
+            
             best_next_acts = self.cem.compute_action(self.construct_q_function(q_i=1),
                                                      next_obss,
                                                      next_h_states,
@@ -159,10 +163,10 @@ class GRAC:
 
             _, q1_best, q2_best, _ = self.model.q_vals(next_obss, next_h_states, best_next_acts)
 
-        return best_next_acts.cpu().detach(), target.cpu().detach(), q1_best.cpu().detach(), q2_best.cpu().detach(), q1_val.sum().cpu().detach(), q2_val.sum().cpu().detach(), q1_best.max().cpu().detach(), q2_best.max().cpu().detach()
+        return best_next_acts.cpu().detach(), target.cpu().detach(), q1_best.cpu().detach(), q2_best.cpu().detach(), (q2_val - q1_val).sum().cpu().detach(), q1_best.max().cpu().detach(), q2_best.max().cpu().detach()
 
     def _compute_pi_loss(self, obss, h_states, acts, lengths):
-        acts_pi, acts_pi_mean, acts_pi_var = self.model.act_stats(obss, h_states, lengths=lengths)
+        acts_pi, acts_pi_mean, acts_pi_var, entropies, v_pi = self.model.act_stats(obss, h_states, lengths=lengths)
         _, q1_pi, _, _ = self.model.q_vals(obss, h_states, acts_pi, lengths=lengths)
         acts_cem = self.cem.compute_action(self.construct_q_function(q_i=0),
                                            obss,
@@ -172,15 +176,16 @@ class GRAC:
                                            lengths=lengths)
         with torch.no_grad():
             _, q1_cem, _, _ = self.model.q_vals(obss, h_states, acts_cem, lengths=lengths)
-            score = q1_cem - q1_pi
+            score = q1_cem - v_pi
             score = torch.clamp(score.detach(), min=0.)
 
         acts_cem_lprob = self.model.lprob(obss, h_states, acts_cem, lengths=lengths)
         cem_loss = (score * acts_cem_lprob).sum() / self.action_dim
+
         q_loss = q1_pi.sum()
         pi_loss = -(q_loss + cem_loss)
         
-        return pi_loss, acts_cem_lprob.max().detach().cpu(), acts_cem_lprob[score > 0].min().detach().cpu()
+        return pi_loss, acts_cem_lprob.max().detach().cpu(), acts_cem_lprob.min().detach().cpu()
 
     def update_qs(self, batch_start_idx, obss, h_states, acts, rews, dones, next_obss, next_h_states, discounting, infos, lengths, update_info):
         init_qs_loss = None
@@ -189,27 +194,26 @@ class GRAC:
         targets = []
         q1_bests = []
         q2_bests = []
-        total_q1_val = 0.
+        total_qs_descrepancy = 0.
         total_q2_val = 0.
         max_q1 = -np.inf
         max_q2 = -np.inf
         for grad_i in range(self._accum_num_grad):
             opt_idxes = range(batch_start_idx + grad_i * self._num_samples_per_accum,
                             batch_start_idx + (grad_i + 1) * self._num_samples_per_accum)
-            best_next_act, target, q1_best, q2_best, q1_sum, q2_sum, q1_max, q2_max = self._compute_acts_targets(obss[opt_idxes],
-                                                                                                 h_states[opt_idxes],
-                                                                                                 acts[opt_idxes],
-                                                                                                 rews[opt_idxes],
-                                                                                                 dones[opt_idxes],
-                                                                                                 next_obss[opt_idxes],
-                                                                                                 discounting[opt_idxes],
-                                                                                                 lengths[opt_idxes])
+            best_next_act, target, q1_best, q2_best, qs_descrepancy, q1_max, q2_max = self._compute_acts_targets(obss[opt_idxes],
+                                                                                                                 h_states[opt_idxes],
+                                                                                                                 acts[opt_idxes],
+                                                                                                                 rews[opt_idxes],
+                                                                                                                 dones[opt_idxes],
+                                                                                                                 next_obss[opt_idxes],
+                                                                                                                 discounting[opt_idxes],
+                                                                                                                 lengths[opt_idxes])
             best_next_acts.append(best_next_act)
             targets.append(target)
             q1_bests.append(q1_best)
             q2_bests.append(q2_best)
-            total_q1_val += q1_sum
-            total_q2_val += q2_sum
+            total_qs_descrepancy += qs_descrepancy
             max_q1 = max(q1_max, max_q1)
             max_q2 = max(q2_max, max_q2)
 
@@ -247,6 +251,7 @@ class GRAC:
                 q1_reg /= self._batch_size
                 q2_reg /= self._batch_size
                 qs_loss = q1_loss + q2_loss + q1_reg + q2_reg
+
                 total_q1_loss += q1_loss.detach().cpu()
                 total_q2_loss += q2_loss.detach().cpu()
                 total_q1_reg += q1_reg.detach().cpu()
@@ -269,16 +274,14 @@ class GRAC:
             if qs_loss.detach() < init_qs_loss * self._alpha:
                 break
 
-        update_info["q1_max"] = max_q1
-        update_info["q2_max"] = max_q2
+        update_info[c.Q1_MAX].append(max_q1)
+        update_info[c.Q2_MAX].append(max_q2)
         update_info[c.Q_UPDATE_TIME].append(total_update_time)
         update_info[c.Q1_LOSS].append(np.mean(q1_losses))
         update_info[c.Q2_LOSS].append(np.mean(q2_losses))
         update_info[c.Q1_REG].append(np.mean(q1_regs))
         update_info[c.Q2_REG].append(np.mean(q2_regs))
-        update_info[c.AVG_Q1_VAL].append(total_q1_val / self._batch_size)
-        update_info[c.AVG_Q2_VAL].append(total_q2_val / self._batch_size)
-        update_info[c.AVG_Q_DISCREPANCY].append(update_info[c.AVG_Q2_VAL][-1] - update_info[c.AVG_Q1_VAL][-1])
+        update_info[c.AVG_Q_DISCREPANCY].append(qs_descrepancy / self._batch_size)
 
 
     def update_policy(self, batch_start_idx, obss, h_states, acts, rews, dones, next_obss, next_h_states, discounting, infos, lengths, update_info):
@@ -300,10 +303,10 @@ class GRAC:
             total_pi_loss += pi_loss.detach().cpu()
             pi_loss.backward()
         nn.utils.clip_grad_norm_(self.model.policy_parameters,
-                                self._max_grad_norm)
+                                 self._max_grad_norm)
         self.policy_opt.step()
-        update_info["lprob_max"] = max_lprob
-        update_info["lprob_min"] = min_lprob
+        update_info[c.LPROB_MAX].append(max_lprob)
+        update_info[c.LPROB_MIN].append(min_lprob)
         update_info[c.POLICY_UPDATE_TIME].append(timeit.default_timer() - tic)
         update_info[c.PI_LOSS].append(total_pi_loss.numpy())
 
@@ -329,6 +332,10 @@ class GRAC:
             update_info[c.AVG_Q1_VAL] = []
             update_info[c.AVG_Q2_VAL] = []
             update_info[c.AVG_Q_DISCREPANCY] = []
+            update_info[c.LPROB_MAX] = []
+            update_info[c.LPROB_MIN] = []
+            update_info[c.Q1_MAX] = []
+            update_info[c.Q2_MAX] = []
 
             for _ in range(self._num_gradient_updates // self._num_prefetch):
                 tic = timeit.default_timer()
