@@ -29,6 +29,7 @@ The following is the list of algorithms that this repository currently support:
 - AlgaeDICE: https://arxiv.org/abs/1912.02074
 - Discriminator Actor Critic (DAC): https://arxiv.org/abs/1809.02925
 - Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973 (NOTE: This is not well tested. The loss seems to explode sometimes... Why?)
+  - Update 1: One reason was that the Q-function was receiving out-of-distribution input from the network. We need to clip the actions before sending it. However, this doesn't solve the whole mystery.
 
 ## Replay Buffers
 The following is the list of supported experience replay:
