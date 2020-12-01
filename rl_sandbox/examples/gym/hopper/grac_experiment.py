@@ -118,7 +118,7 @@ experiment_setting = {
 
     # Model
     c.MODEL_SETTING: {
-        c.MODEL_ARCHITECTURE: FullyConnectedGaussianQAC,
+        c.MODEL_ARCHITECTURE: FullyConnectedGaussianQACSeparate,
         c.KWARGS: {
             c.OBS_DIM: obs_dim,
             c.ACTION_DIM: action_dim,
@@ -126,7 +126,6 @@ experiment_setting = {
             c.DEVICE: device,
             c.NORMALIZE_OBS: False,
             c.NORMALIZE_VALUE: False,
-            # c.EPS: 1e-4,
         },
     },
     
@@ -142,7 +141,7 @@ experiment_setting = {
 
     # GRAC
     c.ACCUM_NUM_GRAD: 1,
-    c.ALPHA: 0.9,
+    c.ALPHA: 0.85,
     c.BATCH_SIZE: 256,
     c.BUFFER_WARMUP: 1000,
     c.COV_NOISE_END: 0.05,
@@ -151,13 +150,13 @@ experiment_setting = {
     c.ELITE_SIZE: 5,
     c.GAMMA: 0.99,
     c.MAX_GRAD_NORM: 1e10,
-    c.NUM_GRADIENT_UPDATES: 20,
+    c.NUM_GRADIENT_UPDATES: 1,
     c.NUM_ITERS: 2,
     c.NUM_PREFETCH: 1,
     c.NUM_Q_UPDATES: 5,
-    c.POP_SIZE: 25,
+    c.POP_SIZE: 64,
     c.REWARD_SCALING: 1.,
-    c.STEPS_BETWEEN_UPDATE: 128,
+    c.STEPS_BETWEEN_UPDATE: 2,
     c.UPDATE_NUM: 0,
 
     # Progress Tracking
@@ -167,7 +166,7 @@ experiment_setting = {
     c.RETURNS: [0],
 
     # Save
-    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-grac-shared/{seed}",
+    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-grac/{seed}",
 
     # train parameters
     c.MAX_TOTAL_STEPS: max_total_steps,

@@ -76,6 +76,10 @@ The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/h
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/algaedice_experiment.py`
 ![AlgaeDICE-separate-alpha_0.2-pnorm_1.5](benchmark_results/gt-algaedice-pnorm_1.5.png "AlgaeDICE Fixed Alpha 0.2 P-Norm 1.5")
 
+#### GRAC
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/grac_experiment.py`
+![GRAC](benchmark_results/gt-grac.png "GRAC")
+
 
 ## TODO
 - [ ] Benchmark each algorithm in MuJoCo.
