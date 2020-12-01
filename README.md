@@ -24,12 +24,14 @@ The following is the list of algorithms that this repository currently support:
 - Proximal Policy Optimization (PPO): https://arxiv.org/abs/1707.06347
 - Soft Actor Critic (SAC): https://arxiv.org/abs/1801.01290
 - Scheduled Auxiliary Control (SAC-X): https://arxiv.org/abs/1802.10567
+  - NOTE: We use SAC for the off-policy algorithm
 - Diversity is All You Need (DIAYN): https://arxiv.org/abs/1802.06070
 - Data-regularized Q (DrQ): https://arxiv.org/abs/2004.13649
 - AlgaeDICE: https://arxiv.org/abs/1912.02074
 - Discriminator Actor Critic (DAC): https://arxiv.org/abs/1809.02925
-- Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973 (NOTE: This is not well tested. The loss seems to explode sometimes... Why?)
-  - Update 1: One reason was that the Q-function was receiving out-of-distribution input from the network. We need to clip the actions before sending it. However, this doesn't solve the whole mystery.
+  - NOTE: We use SAC for the off-policy algorithm
+- Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973
+  - NOTE: The implementation is slightly different, please see here for some of our conversations: https://github.com/stanford-iprl-lab/GRAC/issues/1
 
 ## Replay Buffers
 The following is the list of supported experience replay:
