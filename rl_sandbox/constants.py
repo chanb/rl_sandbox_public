@@ -359,7 +359,11 @@ CEM = "cem"
 COV_NOISE_END = "cov_noise_end"
 COV_NOISE_INIT = "cov_noise_init"
 COV_NOISE_TAU = "cov_noise_tau"
+LPROB_MAX = "lprob_max"
+LPROB_MIN = "lprob_min"
 NUM_Q_UPDATES = "num_q_updates"
+Q1_MAX = "q1_max"
+Q2_MAX = "q2_max"
 Q1_REG = "q1_reg"
 Q2_REG = "q2_reg"
 
@@ -432,6 +436,7 @@ SCHEDULER_UPDATE_TIME = "scheduler_update_time"
 TEMPERATURE = "temperature"
 TEMPERATURE_DECAY = "temperature_decay"
 TEMPERATURE_MIN = "temperature_min"
+BRANCHED_OUTPUTS = "branched_outputs"
 
 # ========================================================================
 # Training parameters
