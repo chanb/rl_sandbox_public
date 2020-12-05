@@ -66,6 +66,10 @@ Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. F
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/ppo_experiment.py`
 ![PPO](benchmark_results/gt-ppo.png "PPO")
 
+#### PPO with LSTM
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/ppo_LSTM_experiment.py`
+![PPO-LSTM](benchmark_results/gt-ppo-lstm.png "PPO LSTM")
+
 #### SAC (Learned alpha)
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/sac_experiment.py`
 ![SAC-separate](benchmark_results/gt-sac-separate.png "SAC Fixed Alpha")

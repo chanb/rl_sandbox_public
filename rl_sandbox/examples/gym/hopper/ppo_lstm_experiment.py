@@ -21,7 +21,6 @@ seed = args.seed
 
 obs_dim = 11
 action_dim = 3
-# device = torch.device(c.CPU)
 device = torch.device("cuda:0")
 
 action_repeat = 1
@@ -50,8 +49,8 @@ experiment_setting = {
                       c.LOG_PROB: ((1,), np.float32),
                       c.VALUE: ((1,), np.float32),
                       c.DISCOUNTING: ((1,), np.float32)},
-            "burn_in_window": 19,
-            "padding_first": True,
+            c.BURN_IN_WINDOW: 19,
+            c.PADDING_FIRST: True,
         },
         c.STORAGE_TYPE: c.RAM,
         c.BUFFER_WRAPPERS: [
