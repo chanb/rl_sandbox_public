@@ -64,32 +64,36 @@ Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. F
 ### Hopper-v2
 #### PPO
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/ppo_experiment.py`
-![PPO](benchmark_results/gt-ppo.png "PPO")
-
-#### PPO with LSTM
-The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/ppo_LSTM_experiment.py`
-![PPO-LSTM](benchmark_results/gt-ppo-lstm.png "PPO LSTM")
+![PPO](benchmark_results/mujoco/hopper-v2/gt-ppo.png "PPO")
 
 #### SAC (Learned alpha)
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/sac_experiment.py`
-![SAC-separate](benchmark_results/gt-sac-separate.png "SAC Fixed Alpha")
+![SAC-separate](benchmark_results/mujoco/hopper-v2/gt-sac-separate.png "SAC Learned Alpha")
 
 #### SAC (Fixed alpha = 0.2)
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/sac_fixed_alpha_experiment.py`
-![SAC-separate-alpha_0.2](benchmark_results/gt-sac-separate-alpha_0.2.png "SAC Fixed Alpha 0.2")
+![SAC-separate-alpha_0.2](benchmark_results/mujoco/hopper-v2/gt-sac-separate-alpha_0.2.png "SAC Fixed Alpha 0.2")
 
 #### AlgaeDICE (Fixed alpha = 0.2, p-norm = 1.5)
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/algaedice_experiment.py`
-![AlgaeDICE-separate-alpha_0.2-pnorm_1.5](benchmark_results/gt-algaedice-pnorm_1.5.png "AlgaeDICE Fixed Alpha 0.2 P-Norm 1.5")
+![AlgaeDICE-separate-alpha_0.2-pnorm_1.5](benchmark_results/mujoco/hopper-v2/gt-algaedice-pnorm_1.5.png "AlgaeDICE Fixed Alpha 0.2 P-Norm 1.5")
 
 #### GRAC
 The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/gym/hopper/grac_experiment.py`
-![GRAC](benchmark_results/gt-grac.png "GRAC")
+![GRAC](benchmark_results/mujoco/hopper-v2/gt-grac.png "GRAC")
 
+### HopperBulletEnv-v0
+#### PPO
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/pybullet/hopper/ppo_experiment.py`
+![PPO](benchmark_results/pybullet/hopper/gt-ppo.png "PPO")
 
-## TODO
-- [ ] Benchmark each algorithm in MuJoCo.
-- [ ] Benchmark each algorithm in PyBullet.
+#### SAC (Learned alpha)
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/pybullet/hopper/sac_experiment.py`
+![SAC](benchmark_results/pybullet/hopper/gt-sac.png "SAC Learned Alpha")
+
+#### AlgaeDICE (Fixed alpha = 0.2, p-norm = 1.5)
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/pybullet/hopper/algaedice_experiment.py`
+![AlgaeDICE-separate-alpha_0.2-pnorm_1.5](benchmark_results/pybullet/hopper/gt-algaedice-pnorm_1.5.png "AlgaeDICE Fixed Alpha 0.2 P-Norm 1.5")
 
 ## Citation
 Please consider citing this repository if you use/extend this codebase in your work:
