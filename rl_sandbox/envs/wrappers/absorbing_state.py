@@ -20,12 +20,12 @@ class AbsorbingStateWrapper:
     def reset(self):
         self._curr_timestep = 0
         self._obs = self._env.reset()
+        self._done = False
         return self._get_obs()
 
     def step(self, action):
         self._curr_timestep += 1
         if self._create_absorbing_state and self._done:
-            self._done = False
             return self._get_obs(), 0., True, {c.ABSORBING_STATE: True, c.DONE: False}
 
         self._obs, reward, done, info = self._env.step(action)

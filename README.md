@@ -33,6 +33,11 @@ The following is the list of algorithms that this repository currently support:
 - Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973
   - NOTE: The implementation is slightly different, please see here for some of our conversations: https://github.com/stanford-iprl-lab/GRAC/issues/1
 
+### Recurrent Neural Networks (RNN)
+We try to support RNNs but sadly that doesn't work too well with off-policy algorithms yet.
+- Without bounding the policy in any way, the log probability of the actions explodes with off-policy data when we don't rollout completely from the beginning.
+- Even after bounding the action mean and variance, the policy fails to learn.
+
 ## Replay Buffers
 The following is the list of supported experience replay:
 - Vanilla
