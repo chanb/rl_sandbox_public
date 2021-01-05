@@ -101,7 +101,7 @@ The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/pybul
 ![AlgaeDICE-separate-alpha_0.2-pnorm_1.5](benchmark_results/pybullet/hopper/gt-algaedice-pnorm_1.5.png "AlgaeDICE Fixed Alpha 0.2 P-Norm 1.5")
 
 #### GRAC
-The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/pybullet/hopper/grac_experiment.py`
+The hyperparameters are located in `${RL_SANDBOX_PATH}/rl_sandbox/examples/pybullet/hopper/grac_experiment.py`. Quite honestly I've tried different hyperparameters for this algorithm... I have yet to try the adaptive actor loss suggested in the issue above.
 ![GRAC](benchmark_results/pybullet/hopper/gt-grac.png "GRAC")
 
 ## Citation
