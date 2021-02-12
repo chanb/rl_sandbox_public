@@ -33,10 +33,10 @@ class Buffer:
     def clear(self):
         raise NotImplementedError
 
-    def sample(self, batch_size):
+    def sample(self, batch_size, idxes=None):
         raise NotImplementedError
 
-    def sample_with_next_obs(self, batch_size, next_obs, next_h_state=None):
+    def sample_with_next_obs(self, batch_size, next_obs, next_h_state=None, idxes=None):
         raise NotImplementedError
 
     def sample_consecutive(self, batch_size, end_with_done=False):
