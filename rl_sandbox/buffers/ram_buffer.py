@@ -50,6 +50,7 @@ class NumPyBuffer(Buffer):
             self.padding_first = padding_first
             self.historic_observations = np.zeros(shape=(burn_in_window, *obs_dim), dtype=dtype)
             self.historic_hidden_states = np.zeros(shape=(burn_in_window, *h_state_dim), dtype=dtype)
+            self.historic_dones = np.zeros(shape=(burn_in_window, 1), dtype=np.bool)
 
         self._checkpoint_interval = checkpoint_interval
         self._checkpoint_idxes = np.ones(shape=memory_size, dtype=np.bool)
@@ -116,14 +117,12 @@ class NumPyBuffer(Buffer):
     def push(self, obs, h_state, act, rew, done, info, **kwargs):
         # Stores the overwritten observation and hidden state into historic variables
         if self.burn_in_window > 0:
-            if self.dones[self._pointer]:
-                self.historic_observations.fill(0)
-                self.historic_hidden_states.fill(0)
-            else:
-                self.historic_observations = np.concatenate(
-                    (self.historic_observations[1:], [self.observations[self._pointer]]))
-                self.historic_hidden_states = np.concatenate(
-                    (self.historic_hidden_states[1:], [self.hidden_states[self._pointer]]))
+            self.historic_observations = np.concatenate(
+                (self.historic_observations[1:], [self.observations[self._pointer]]))
+            self.historic_hidden_states = np.concatenate(
+                (self.historic_hidden_states[1:], [self.hidden_states[self._pointer]]))
+            self.historic_dones = np.concatenate(
+                (self.historic_dones[1:], [self.dones[self._pointer]]))
 
         self.observations[self._pointer] = obs
         self.hidden_states[self._pointer] = h_state
@@ -149,66 +148,29 @@ class NumPyBuffer(Buffer):
         self._checkpoint_idxes.fill(1)
 
     def _get_burn_in_window(self, idxes):
-        pointer = self._pointer
+        historic_observations = np.zeros((len(idxes), self.burn_in_window, *self.observations.shape[1:]))
+        historic_hidden_states = np.zeros((len(idxes), self.burn_in_window, *self.hidden_states.shape[1:]))
+        not_dones = np.ones(len(idxes), dtype=np.bool)
+        lengths = np.zeros(len(idxes), dtype=np.int)
 
-        # Shift to frame of reference where pointer is at 0
-        end_idxes = idxes
-        start_idxes = (end_idxes - self.burn_in_window)
+        for ii in range(1, self.burn_in_window + 1):
+            shifted_idxes = idxes - self._pointer - ii
+            historic_idxes = np.logical_and(idxes - self._pointer - ii >= -self.burn_in_window, shifted_idxes < 0).astype(np.int)
+            non_historic_idxes = 1 - historic_idxes
 
-        idx_ranges = np.tile(np.arange(self.burn_in_window), (len(idxes), 1)) + start_idxes[:, None]
+            not_dones[np.where(self.dones[idxes - ii, 0] * non_historic_idxes)] = 0
+            not_dones[np.where(self.historic_dones[-ii, 0] * historic_idxes)] = 0
+            non_historic_not_dones = not_dones * non_historic_idxes
+            historic_not_dones = not_dones * historic_idxes
 
-        wraparound_idxes = (idx_ranges.reshape(-1)) % self._memory_size
-        historic_observations = self.observations[wraparound_idxes].reshape(
-            (len(idxes), self.burn_in_window, *self.historic_observations.shape[1:]))
-        historic_hidden_states = self.hidden_states[wraparound_idxes].reshape(
-            (len(idxes), self.burn_in_window, *self.historic_hidden_states.shape[1:]))
+            historic_observations[:, -ii] += self.observations[idxes - ii] * non_historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
+            historic_hidden_states[:, -ii] += self.hidden_states[idxes - ii] * non_historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
+            lengths += 1 * non_historic_not_dones
 
-        # Replace all the wraparound with zeros if buffer isn't full to begin with
-        if np.sum(idx_ranges < 0) > 0 and len(self) != self._memory_size:
-            historic_observations[idx_ranges < 0] = 0
-            historic_hidden_states[idx_ranges < 0] = 0
-
-        # Replace values with historic frame data if it needs to
-        shifted_idxes = idxes - pointer
-        burn_in_window_idxes = np.where(np.logical_and(shifted_idxes >= 0, self.burn_in_window > shifted_idxes))[0]
-        shifted_idxes = idx_ranges - pointer
-        mask = np.zeros(idx_ranges.shape)
-        mask[burn_in_window_idxes] = 1
-        mask *= (shifted_idxes < 0)
-        shifted_idxes[np.where(np.logical_or(shifted_idxes < -self.burn_in_window, shifted_idxes >= self.burn_in_window))] = 0
-        
-        h_state_mask = mask.reshape(*mask.shape, *[1] * len(self.hidden_states.shape[1:]))
-        historic_hidden_states = historic_hidden_states * (1 - h_state_mask) + self.historic_hidden_states[shifted_idxes] * h_state_mask
-        obs_mask = mask.reshape(*mask.shape, *[1] * len(self.observations.shape[1:]))
-        historic_observations = historic_observations * (1 - obs_mask) + self.historic_observations[shifted_idxes] * obs_mask
-
-
-        # Zero-out values that are before the current episode
-        complete_window_idxes = np.tile(np.arange(self.burn_in_window + 1), (len(idxes), 1)) + start_idxes[:, None]
-        done_mask = self.dones[complete_window_idxes]
-        done_mask[:, :self.burn_in_window] = done_mask[:, :self.burn_in_window] * (1 - mask[..., None])
-        done_mask = np.sum(np.cumsum(done_mask, axis=-2) - done_mask, axis=-1)
-        done_mask = (done_mask == np.max(done_mask, axis=-1, keepdims=True))[:, :self.burn_in_window]
-        if np.sum(idx_ranges < 0) > 0 and len(self) != self._memory_size:
-            done_mask[idx_ranges < 0] = False
-        obs_mask = done_mask.reshape(*done_mask.shape, *[1] * len(self.observations.shape[1:]))
-        historic_observations *= obs_mask
-        h_state_mask = done_mask.reshape(*done_mask.shape, *[1] * len(self.hidden_states.shape[1:]))
-        historic_hidden_states *= h_state_mask
-
-        lengths = np.sum(done_mask, axis=1)
-
-        # import pickle as pickle
-        # with open("chkpt.pkl", "wb") as f:
-        #     pickle.dump({
-        #         "obss": historic_observations,
-        #         "h_states": historic_hidden_states,
-        #         "lengths": lengths,
-        #         "idxes": idxes,
-        #         "buffer_obss": self.observations,
-        #         "buffer_h_states": self.hidden_states,
-        #         "buffer_dones": self.dones,
-        #     }, f)
+            if self._count > self._memory_size:
+                historic_observations[:, -ii] += self.historic_observations[-self._pointer - ii] * historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
+                historic_hidden_states[:, -ii] += self.historic_hidden_states[-self._pointer - ii] * historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
+                lengths += 1 * historic_not_dones
 
         return historic_observations, historic_hidden_states, lengths
 
@@ -234,14 +196,6 @@ class NumPyBuffer(Buffer):
             obss = obss[:, None, ...]
             h_states = h_states[:, None, ...]
 
-        # to_take = np.where(lengths < 20)[0][0]
-        # print(obss[to_take])
-        # print(idxes[to_take])
-        # print(lengths[to_take])
-        # print(self.dones[idxes[to_take] - 1: idxes[to_take] + 1])
-        # print(obss.shape)
-        # assert 0
-
         return obss, h_states, acts, rews, dones, infos, lengths
 
     def get_next(self, next_idxes, next_obs, next_h_state):
@@ -258,19 +212,21 @@ class NumPyBuffer(Buffer):
 
         return next_obss, next_h_states
 
-    def sample(self, batch_size):
+    def sample(self, batch_size, idxes=None):
         if not len(self):
             raise NoSampleError
 
-        random_idxes = self.rng.randint(
-            len(self), size=batch_size)
+        if idxes is None:
+            random_idxes = self.rng.randint(len(self), size=batch_size)
+        else:
+            random_idxes = idxes
 
         obss, h_states, acts, rews, dones, infos, lengths = self.get_transitions(random_idxes)
 
         return obss, h_states, acts, rews, dones, infos, lengths, random_idxes
 
-    def sample_with_next_obs(self, batch_size, next_obs, next_h_state):
-        obss, h_states, acts, rews, dones, infos, lengths, random_idxes = NumPyBuffer.sample(self, batch_size)
+    def sample_with_next_obs(self, batch_size, next_obs, next_h_state, idxes=None):
+        obss, h_states, acts, rews, dones, infos, lengths, random_idxes = NumPyBuffer.sample(self, batch_size, idxes)
 
         next_idxes = random_idxes + 1
         next_obss, next_h_states = self.get_next(next_idxes, next_obs, next_h_state)
@@ -452,8 +408,8 @@ class NextStateNumPyBuffer(NumPyBuffer):
 
         return super().push(obs=obs, h_state=h_state, act=act, rew=rew, done=done, info=info)
 
-    def sample_with_next_obs(self, batch_size, next_obs, next_h_state):
-        obss, h_states, acts, rews, dones, infos, lengths, random_idxes = NumPyBuffer.sample(self, batch_size)
+    def sample_with_next_obs(self, batch_size, next_obs, next_h_state, idxes=None):
+        obss, h_states, acts, rews, dones, infos, lengths, random_idxes = NumPyBuffer.sample(self, batch_size, idxes)
         next_obss = self.next_observations[random_idxes][:, None, ...]
         next_h_states = self.next_hidden_states[random_idxes][:, None, ...]
 
@@ -534,3 +490,8 @@ class NextStateNumPyBuffer(NumPyBuffer):
 
         for k, v in self.infos.items():
             self.infos[k][:count] = data[c.INFOS][k][-count:]
+
+
+class TrajectoryNumPyBuffer(NumPyBuffer):
+    """ This buffer stores one trajectory as a sample
+    """
