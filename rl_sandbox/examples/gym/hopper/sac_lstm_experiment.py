@@ -8,7 +8,9 @@ import rl_sandbox.transforms.general_transforms as gt
 from rl_sandbox.agents.random_agents import UniformContinuousAgent
 from rl_sandbox.buffers.wrappers.torch_buffer import TorchBuffer
 from rl_sandbox.envs.wrappers.action_repeat import ActionRepeatWrapper
+from rl_sandbox.envs.wrappers.augment_action import AugmentActionWrapper
 from rl_sandbox.envs.wrappers.frame_stack import FrameStackWrapper
+from rl_sandbox.envs.wrappers.renderer import GymRenderer
 from rl_sandbox.train.train_sac import train_sac
 from rl_sandbox.model_architectures.actor_critics.fully_connected_soft_actor_critic import LSTMSquashedGaussianSAC
 from rl_sandbox.model_architectures.layers_definition import VALUE_BASED_LINEAR_LAYERS
@@ -22,6 +24,7 @@ seed = args.seed
 
 obs_dim = 11
 action_dim = 3
+# obs_dim += action_dim
 min_action = -np.ones(action_dim)
 max_action = np.ones(action_dim)
 
@@ -54,8 +57,8 @@ experiment_setting = {
                       c.LOG_PROB: ((1,), np.float32),
                       c.VALUE: ((1,), np.float32),
                       c.DISCOUNTING: ((1,), np.float32)},
-            "burn_in_window": 4,
-            "padding_first": True,
+            c.BURN_IN_WINDOW: 19,
+            c.PADDING_FIRST: True,
             c.CHECKPOINT_INTERVAL: 0,
             c.CHECKPOINT_PATH: None,
         },
@@ -78,6 +81,16 @@ experiment_setting = {
         },
         c.ENV_TYPE: c.GYM,
         c.ENV_WRAPPERS: [
+            {
+                c.WRAPPER: GymRenderer,
+                c.KWARGS: {},
+            },
+            # {
+            #     c.WRAPPER: AugmentActionWrapper,
+            #     c.KWARGS: {
+            #         c.ACTION_DIM: action_dim,
+            #     }
+            # },
             {
                 c.WRAPPER: ActionRepeatWrapper,
                 c.KWARGS: {
@@ -105,7 +118,7 @@ experiment_setting = {
     c.NUM_EVALUATION_EPISODES: 5,
 
     # Exploration
-    c.EXPLORATION_STEPS: 0,
+    c.EXPLORATION_STEPS: 1000,
     c.EXPLORATION_STRATEGY: UniformContinuousAgent(min_action,
                                                    max_action,
                                                    np.random.RandomState(seed)),
@@ -120,6 +133,7 @@ experiment_setting = {
     # Logging
     c.PRINT_INTERVAL: 5000,
     c.SAVE_INTERVAL: 50000,
+    c.LOG_INTERVAL: 1,
 
     # Model
     c.MODEL_SETTING: {
@@ -129,7 +143,7 @@ experiment_setting = {
             c.HIDDEN_STATE_DIM: hidden_state_dim,
             c.ACTION_DIM: action_dim,
             c.SHARED_LAYERS: VALUE_BASED_LINEAR_LAYERS(in_dim=obs_dim),
-            c.INITIAL_ALPHA: 0.2,
+            c.INITIAL_ALPHA: 1.,
             c.DEVICE: device,
             c.NORMALIZE_OBS: False,
             c.NORMALIZE_VALUE: False,
@@ -137,9 +151,23 @@ experiment_setting = {
     },
     
     c.OPTIMIZER_SETTING: {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 3e-4,
+        c.POLICY: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
+        },
+        c.QS: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
+        },
+        c.ALPHA: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
         },
     },
 
@@ -152,13 +180,13 @@ experiment_setting = {
     c.BATCH_SIZE: 256,
     c.BUFFER_WARMUP: 1000,
     c.GAMMA: 0.99,
-    c.LEARN_ALPHA: False,
-    c.MAX_GRAD_NORM: 100.,
+    c.LEARN_ALPHA: True,
+    c.MAX_GRAD_NORM: 1e10,
     c.NUM_GRADIENT_UPDATES: 1,
     c.NUM_PREFETCH: 1,
     c.REWARD_SCALING: 1.,
     c.STEPS_BETWEEN_UPDATE: 1,
-    c.TARGET_ENTROPY: -3.,
+    c.TARGET_ENTROPY: -action_dim,
     c.TARGET_UPDATE_INTERVAL: 1,
     c.TAU: 0.005,
     c.UPDATE_NUM: 0,
@@ -167,10 +195,11 @@ experiment_setting = {
     c.CUM_EPISODE_LENGTHS: [0],
     c.CURR_EPISODE: 1,
     c.NUM_UPDATES: 0,
-    c.RETURNS: [0],
+    c.RETURNS: [],
 
     # Save
-    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-sac-lstm/{seed}",
+    # c.SAVE_PATH: f"/mnt/HDD/results/mujoco/hopper-v2/gt-sac-lstm/{seed}",
+    c.SAVE_PATH: None,
 
     # train parameters
     c.MAX_TOTAL_STEPS: max_total_steps,

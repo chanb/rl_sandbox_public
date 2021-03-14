@@ -21,6 +21,7 @@ seed = args.seed
 
 obs_dim = 11
 action_dim = 3
+# device = torch.device(c.CPU)
 device = torch.device("cuda:0")
 
 action_repeat = 1
@@ -49,8 +50,8 @@ experiment_setting = {
                       c.LOG_PROB: ((1,), np.float32),
                       c.VALUE: ((1,), np.float32),
                       c.DISCOUNTING: ((1,), np.float32)},
-            c.BURN_IN_WINDOW: 19,
-            c.PADDING_FIRST: True,
+            "burn_in_window": 3,
+            "padding_first": True,
         },
         c.STORAGE_TYPE: c.RAM,
         c.BUFFER_WRAPPERS: [
@@ -104,6 +105,7 @@ experiment_setting = {
     # Logging
     c.PRINT_INTERVAL: 5000,
     c.SAVE_INTERVAL: 1000000,
+    c.LOG_INTERVAL: 1,
 
     # Model
     c.MODEL_SETTING: {
@@ -120,9 +122,11 @@ experiment_setting = {
     },
     
     c.OPTIMIZER_SETTING: {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 3e-4,
+        c.POLICY: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
         },
     },
 
@@ -147,7 +151,7 @@ experiment_setting = {
     c.CUM_EPISODE_LENGTHS: [0],
     c.CURR_EPISODE: 1,
     c.NUM_UPDATES: 0,
-    c.RETURNS: [0],
+    c.RETURNS: [],
 
     # Save
     c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-ppo-lstm/{seed}",

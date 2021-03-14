@@ -8,6 +8,7 @@ import rl_sandbox.transforms.general_transforms as gt
 from rl_sandbox.buffers.wrappers.torch_buffer import TorchBuffer
 from rl_sandbox.envs.wrappers.action_repeat import ActionRepeatWrapper
 from rl_sandbox.envs.wrappers.frame_stack import FrameStackWrapper
+from rl_sandbox.envs.wrappers.renderer import GymRenderer
 from rl_sandbox.train.train_ppo import train_ppo
 from rl_sandbox.model_architectures.actor_critics.fully_connected_actor_critic import FullyConnectedGaussianAC
 from rl_sandbox.model_architectures.layers_definition import POLICY_BASED_LINEAR_LAYERS
@@ -21,6 +22,7 @@ seed = args.seed
 
 obs_dim = 11
 action_dim = 3
+# device = torch.device(c.CPU)
 device = torch.device("cuda:0")
 
 action_repeat = 1
@@ -67,6 +69,10 @@ experiment_setting = {
         c.ENV_TYPE: c.GYM,
         c.ENV_WRAPPERS: [
             {
+                c.WRAPPER: GymRenderer,
+                c.KWARGS: {}
+            },
+            {
                 c.WRAPPER: ActionRepeatWrapper,
                 c.KWARGS: {
                     c.ACTION_REPEAT: action_repeat,
@@ -87,7 +93,7 @@ experiment_setting = {
 
     # Evaluation
     c.EVALUATION_FREQUENCY: 5000,
-    c.EVALUATION_RENDER: False,
+    c.EVALUATION_RENDER: True,
     c.EVALUATION_RETURNS: [],
     c.NUM_EVALUATION_EPISODES: 5,
     
@@ -99,6 +105,7 @@ experiment_setting = {
     c.LOAD_MODEL: False,
 
     # Logging
+    c.LOG_INTERVAL: 1,
     c.PRINT_INTERVAL: 5000,
     c.SAVE_INTERVAL: 1000000,
 
@@ -116,9 +123,11 @@ experiment_setting = {
     },
     
     c.OPTIMIZER_SETTING: {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 3e-4,
+        c.POLICY: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
         },
     },
 
@@ -143,7 +152,7 @@ experiment_setting = {
     c.CUM_EPISODE_LENGTHS: [0],
     c.CURR_EPISODE: 1,
     c.NUM_UPDATES: 0,
-    c.RETURNS: [0],
+    c.RETURNS: [],
 
     # Save
     c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-ppo/{seed}",

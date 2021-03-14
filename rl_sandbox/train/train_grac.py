@@ -23,8 +23,6 @@ def train_grac(experiment_config):
     evaluation_env = None
     if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
         evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
-
-    # NOTE: The original implementation actually uses CEM as well for interaction to gather data, but we won't here.
     # experiment_config[c.MODEL_SETTING][c.KWARGS][c.CEM] = CEMQ(cov_noise_init=experiment_config[c.COV_NOISE_INIT],
     #                                                            cov_noise_end=experiment_config[c.COV_NOISE_END],
     #                                                            cov_noise_tau=experiment_config[c.COV_NOISE_TAU],
@@ -36,20 +34,12 @@ def train_grac(experiment_config):
     #                                                            device=experiment_config[c.DEVICE],
     #                                                            min_action=experiment_config[c.MIN_ACTION],
     #                                                            max_action=experiment_config[c.MAX_ACTION])
-
     model = make_model(experiment_config[c.MODEL_SETTING])
     buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
 
     # policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING])
-
-    # NOTE: The original implementation also adaptively changes the learning rate, but not in this implementation...
-    policy_opt = make_optimizer(model.policy_parameters, {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 2e-4,
-        },
-    })
-    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING])
+    policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
+    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])
 
     aux_tasks = make_auxiliary_tasks(experiment_config[c.AUXILIARY_TASKS],
                                      model,
@@ -74,7 +64,7 @@ def train_grac(experiment_config):
                                learning_algorithm=None,
                                preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
 
-    summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.SAC, cfg=experiment_config)
+    summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.GRAC, cfg=experiment_config)
     train(agent=agent,
           evaluation_agent=evaluation_agent,
           train_env=train_env,

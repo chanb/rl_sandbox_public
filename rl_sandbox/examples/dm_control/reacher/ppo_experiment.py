@@ -129,9 +129,11 @@ experiment_setting = {
     },
     
     c.OPTIMIZER_SETTING: {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 3e-4,
+        c.POLICY: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
         },
     },
 
@@ -156,7 +158,7 @@ experiment_setting = {
     c.CUM_EPISODE_LENGTHS: [0],
     c.CURR_EPISODE: 1,
     c.NUM_UPDATES: 0,
-    c.RETURNS: [0],
+    c.RETURNS: [],
 
     # Save
     c.SAVE_PATH: f"../results/dm_control/reacher/easy/gt-ppo/{seed}",
