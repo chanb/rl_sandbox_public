@@ -130,9 +130,17 @@ experiment_setting = {
     },
     
     c.OPTIMIZER_SETTING: {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 3e-4,
+        c.POLICY: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 2e-4,
+            },
+        },
+        c.QS: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
         },
     },
 
@@ -163,10 +171,11 @@ experiment_setting = {
     c.CUM_EPISODE_LENGTHS: [0],
     c.CURR_EPISODE: 1,
     c.NUM_UPDATES: 0,
-    c.RETURNS: [0],
+    c.RETURNS: [],
 
     # Save
     c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-grac/{seed}",
+    # c.SAVE_PATH: None,
 
     # train parameters
     c.MAX_TOTAL_STEPS: max_total_steps,

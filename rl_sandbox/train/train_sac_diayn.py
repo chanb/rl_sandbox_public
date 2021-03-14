@@ -29,10 +29,10 @@ def train_sac_diayn(experiment_config):
     prior = experiment_config[c.PRIOR]
     buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
 
-    policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING])
-    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING])
-    alpha_opt = make_optimizer([model.log_alpha], experiment_config[c.OPTIMIZER_SETTING])
-    discriminator_opt = make_optimizer(discriminator.parameters(), experiment_config[c.OPTIMIZER_SETTING])
+    policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
+    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])
+    alpha_opt = make_optimizer([model.log_alpha], experiment_config[c.OPTIMIZER_SETTING][c.ALPHA])
+    discriminator_opt = make_optimizer(discriminator.parameters(), experiment_config[c.OPTIMIZER_SETTING][c.DISCRIMINATOR])
 
     aux_tasks = make_auxiliary_tasks(experiment_config[c.AUXILIARY_TASKS],
                                      model,

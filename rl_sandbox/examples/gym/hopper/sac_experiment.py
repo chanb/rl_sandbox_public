@@ -26,6 +26,7 @@ min_action = -np.ones(action_dim)
 max_action = np.ones(action_dim)
 
 device = torch.device("cuda:0")
+# device = torch.device(c.CPU)
 
 action_repeat = 1
 num_frames = 1
@@ -117,10 +118,11 @@ experiment_setting = {
 
     # Model
     c.MODEL_SETTING: {
-        c.MODEL_ARCHITECTURE: FullyConnectedSeparate,
+        c.MODEL_ARCHITECTURE: FullyConnectedSquashedGaussianSAC,
         c.KWARGS: {
             c.OBS_DIM: obs_dim,
             c.ACTION_DIM: action_dim,
+            c.SHARED_LAYERS: VALUE_BASED_LINEAR_LAYERS(in_dim=obs_dim),
             c.INITIAL_ALPHA: 1.,
             c.DEVICE: device,
             c.NORMALIZE_OBS: False,
@@ -129,15 +131,29 @@ experiment_setting = {
     },
     
     c.OPTIMIZER_SETTING: {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 3e-4,
+        c.POLICY: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
+        },
+        c.QS: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
+        },
+        c.ALPHA: {
+            c.OPTIMIZER: torch.optim.Adam,
+            c.KWARGS: {
+                c.LR: 3e-4,
+            },
         },
     },
 
     # SAC
     c.ACCUM_NUM_GRAD: 1,
-    c.BATCH_SIZE: 256,
+    c.BATCH_SIZE: 128,
     c.BUFFER_WARMUP: 1000,
     c.EVALUATION_PREPROCESSING: gt.Identity(),
     c.GAMMA: 0.99,
@@ -149,7 +165,7 @@ experiment_setting = {
     c.STEPS_BETWEEN_UPDATE: 1,
     c.TARGET_ENTROPY: -action_dim,
     c.TARGET_UPDATE_INTERVAL: 1,
-    c.TAU: 0.005,
+    c.TAU: 0.01,
     c.TRAIN_PREPROCESSING: gt.Identity(),
     c.UPDATE_NUM: 0,
 
@@ -157,10 +173,10 @@ experiment_setting = {
     c.CUM_EPISODE_LENGTHS: [0],
     c.CURR_EPISODE: 1,
     c.NUM_UPDATES: 0,
-    c.RETURNS: [0],
+    c.RETURNS: [],
 
     # Save
-    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-sac-separate/{seed}",
+    c.SAVE_PATH: f"../results/mujoco/hopper-v2/gt-sac/{seed}",
 
     # train parameters
     c.MAX_TOTAL_STEPS: max_total_steps,

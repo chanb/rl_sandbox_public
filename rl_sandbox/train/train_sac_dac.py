@@ -26,15 +26,9 @@ def train_sac_dac(experiment_config):
     model = make_model(experiment_config[c.MODEL_SETTING])
     buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
 
-    # policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING])
-    policy_opt = make_optimizer(model.policy_parameters, {
-        c.OPTIMIZER: torch.optim.Adam,
-        c.KWARGS: {
-            c.LR: 1e-5,
-        },
-    })
-    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING])
-    alpha_opt = make_optimizer([model.log_alpha], experiment_config[c.OPTIMIZER_SETTING])
+    policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
+    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])
+    alpha_opt = make_optimizer([model.log_alpha], experiment_config[c.OPTIMIZER_SETTING][c.ALPHA])
 
     aux_tasks = make_auxiliary_tasks(experiment_config[c.AUXILIARY_TASKS],
                                      model,
@@ -53,7 +47,7 @@ def train_sac_dac(experiment_config):
     expert_buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
     expert_buffer.load(experiment_config[c.EXPERT_BUFFER])
     discriminator = make_model(experiment_config[c.DISCRIMINATOR_SETTING])
-    discriminator_opt = make_optimizer(discriminator.parameters(), experiment_config[c.OPTIMIZER_SETTING])
+    discriminator_opt = make_optimizer(discriminator.parameters(), experiment_config[c.OPTIMIZER_SETTING][c.DISCRIMINATOR])
     dac = DAC(discriminator=discriminator,
               discriminator_opt=discriminator_opt,
               expert_buffer=expert_buffer,

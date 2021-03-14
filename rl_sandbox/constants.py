@@ -17,9 +17,12 @@ ALGO = "algo"
 ALGORITHM = "algorithm"
 ALGO_TYPE = "algo_type"
 BASE = "base"
+BC = "bc"
 DAC = "dac"
 DIAYN = "diayn"
 DRQ = "drq"
+GRAC = "grac"
+MBPO = "mbpo"
 PPO = "ppo"
 SAC = "sac"
 SACX = "sacx"
@@ -47,6 +50,7 @@ OBS_DIM = "obs_dim"
 OUTPUT_DIM = "output_dim"
 REC_DIM = "rec_dim"
 REWARD_DIM = "reward_dim"
+STATE_DIM = "state_dim"
 SCALAR_FEATURE_DIM = "scalar_feature_dim"
 SHARED_OUT_DIM = "shared_out_dim"
 TASK_DIM = "task_dim"
@@ -67,7 +71,11 @@ GYM = "gym"
 MAX_EPISODE_LENGTH = "max_episode_length"
 OBS_TYPE = "obs_type"
 ORIGINAL_OBS = "original_obs"
+PIXELS = "pixels"
+PIXELS_ONLY = "pixels_only"
 RENDER = "render"
+STATE = "state"
+TASK_KWARGS = "task_kwargs"
 TASK_NAME = "task_name"
 WRAPPER = "wrapper"
 
@@ -86,15 +94,20 @@ MAX_GRAD_NORM = "max_grad_norm"
 NUM_GRADIENT_UPDATES = "num_gradient_updates"
 NUM_UPDATES = "num_updates"
 NUM_PREFETCH = "num_prefetch"
-OPTIMIZER = "optimizer"
 OPTIMIZER_SETTING = "optimizer_setting"
 PREPROCESS = "preprocess"
 REWARD_SCALING = "reward_scaling"
 RNG = "rng"
 STEPS_BETWEEN_UPDATE = "steps_between_update"
+RANDOM = "random"
 SEED = "seed"
 TRAIN_PREPROCESSING = "train_preprocessing"
 UPDATE_NUM = "update_num"
+
+# Graphics
+RGB = "rgb"
+RGB_ARRAY = "rgb_array"
+WINDOW = "window"
 
 # Gym Thing
 IS_RENDER = "is_render"
@@ -114,6 +127,7 @@ NUM_IMAGES = "num_images"
 WIDTH = "width"
 
 # Losses
+BC_LOSS = "bc_loss"
 PG_LOSS = "pg_loss"
 V_LOSS = "v_loss"
 
@@ -230,6 +244,7 @@ MAX_TOTAL_STEPS = "max_total_steps"
 NUM_EPISODES = "num_episodes"
 NUM_ITERS = "num_iters"
 NUM_STEPS = "num_steps"
+POLICY = "policy"
 RETURNS = "returns"
 VALUE = "value"
 
@@ -270,6 +285,7 @@ LOAD_BUFFER = "load_buffer"
 LOAD_MODEL = "load_model"
 LOG_SETTING = "log_setting"
 MIN_MAX = "min_max"
+MODEL_UPDATE_TIME = "model_update_time"
 SAMPLE_TIME = "sample_time"
 SAVE_PATH = "save_path"
 POLICY_UPDATE_TIME = "policy_update_time"
@@ -291,9 +307,11 @@ GREEDY = "greedy"
 UNIFORM_SAMPLE = "uniform_sample"
 
 # learning_utils.py/train
+EVALUATION_INFO = "evaluation_info"
 INTERACTION_INFO = "interaction_info"
 PRINT_INTERVAL = "print_interval"
 SAVE_INTERVAL = "save_interval"
+LOG_INTERVAL = "log_interval"
 TERMINATION_BUFFER_FILE = "termination_buffer.pkl"
 TERMINATION_STATE_DICT_FILE = "termination_state_dict.pt"
 TERMINATION_TRAIN_FILE = "termination_train.pkl"
@@ -375,8 +393,22 @@ KOOPMAN = "koopman"
 KOOPMAN_DYNAMICS = "koopman_dynamics"
 KOOPMAN_OPTIMIZER = "koopman_optimizer"
 
+# MBPO
+VALIDATION_RATIO = "validation_ratio"
+VALIDATION_LOSS = "validation_loss"
+VALIDATION_SAMPLE_TIME = "validation_sample_time"
+
 # Model-based
 DYNAMICS = "dynamics"
+MODEL_CONSTRUCTOR = "model_constructor"
+MODEL_KWARGS = "model_kwargs"
+MODEL_LOSS = "model_loss"
+MODEL_NUM_GRADIENT_UPDATES = "model_num_gradient_updates"
+MODEL_OPTIMIZER = "model_optimizer"
+MODEL_STATE_DICT = "model_state_dict"
+MODEL_VALIDATION_LOSS = "model_validation_loss"
+MODEL_ROLLOUT_TIME = "model_rollout_time"
+NUM_MODELS = "num_models"
 
 # Off-policy
 BUFFER_WARMUP = "buffer_warmup"
@@ -415,6 +447,7 @@ PI_LOSS = "pi_loss"
 POLICY_OPTIMIZER = "pi_optimizer"
 Q1_LOSS = "q1_loss"
 Q2_LOSS = "q2_loss"
+QS = "qs"
 QS_OPTIMIZER = "qs_optimizer"
 TARGET_ENTROPY = "target_entropy"
 
@@ -460,12 +493,13 @@ DEFAULT_TRAIN_PARAMS = {
     CHECKPOINT_PATH: 'checkpoints/',
     PRINT_INTERVAL: 100,
     SAVE_INTERVAL: 5,
+    LOG_INTERVAL: 1,
 
     # Progress Tracking
     CUM_EPISODE_LENGTHS: [0],
     CURR_EPISODE: 1,
     NUM_UPDATES: 0,
-    RETURNS: [0],
+    RETURNS: [],
 
     # Train
     MAX_TOTAL_STEPS: 1000000,
@@ -477,6 +511,16 @@ DEFAULT_ALGAEDICE_PARAMS = {
     ALGAE_ALPHA: 0.01,
     CRITIC_MIXTURE_RATIO: 0.05,
     P_NORM_EXP: 2,
+}
+
+# BC
+DEFAULT_BC_PARAMS = {
+    ACCUM_NUM_GRAD: 1,
+    OPT_BATCH_SIZE: 256,
+    OPT_EPOCHS: 1,
+    STEPS_BETWEEN_UPDATE: 1000,
+    MAX_GRAD_NORM: 1e10,
+    VALIDATION_RATIO: 0.3,
 }
 
 # DIAYN
@@ -515,6 +559,20 @@ DEFAULT_GRAC_PARAMS = {
     REWARD_SCALING: 1.,
     STEPS_BETWEEN_UPDATE: 1,
     UPDATE_NUM: 0,
+}
+
+# MBPO
+DEFAULT_MBPO_PARAMS = {
+    ACCUM_NUM_GRAD: 1,
+    BATCH_SIZE: 64,
+    VALIDATION_RATIO: 0.2,
+    BUFFER_WARMUP: 1000,
+    NUM_GRADIENT_UPDATES: 1,
+    NUM_PREFETCH: 1,
+    MAX_GRAD_NORM: 1e10,
+    STEPS_BETWEEN_UPDATE: 1000,
+    M: 400,
+    K: 1,
 }
 
 # PER
