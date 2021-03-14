@@ -36,14 +36,18 @@ class PrioritizedExperienceReplay(BufferWrapper):
         self._priority_tree.add(priority)
         super().push(obs, h_state, act, rew, done, info, **kwargs)
 
-    def sample(self, batch_size):
+    def sample(self, batch_size, idxes=None):
         if not len(self):
             raise NoSampleError
 
         self._beta = min(1, self._beta + self._beta_increment)
 
-        tree_idxes, priorities = self._priority_tree.sample(batch_size)
-        idxes = tree_idxes - self._priority_tree.shift
+        if idxes is None:
+            tree_idxes, priorities = self._priority_tree.sample(batch_size)
+            idxes = tree_idxes - self._priority_tree.shift
+        else:
+            tree_idxes = idxes + self._priority_tree.shift
+            priorities = self._priority_tree.tree[tree_idxes]
 
         sample_probs = priorities / self._priority_tree.total_value
         importance_sampling_weights = np.power(len(self) * sample_probs, -self._beta)
@@ -59,8 +63,8 @@ class PrioritizedExperienceReplay(BufferWrapper):
 
         return obss, h_states, acts, rews, dones, infos, lengths, idxes
 
-    def sample_with_next_obs(self, batch_size, next_obs, next_h_state):
-        obss, h_states, acts, rews, dones, infos, lengths, random_idxes = self.sample(batch_size)
+    def sample_with_next_obs(self, batch_size, next_obs, next_h_state, idxes=None):
+        obss, h_states, acts, rews, dones, infos, lengths, random_idxes = self.sample(batch_size, idxes)
 
         next_idxes = random_idxes + 1
         next_obss, next_h_states = self.buffer.get_next(next_idxes, next_obs, next_h_state)

@@ -20,12 +20,12 @@ class TorchBuffer(BufferWrapper):
 
         return obss, h_states, acts, rews, dones, infos, lengths
 
-    def sample(self, batch_size):
-        obss, h_states, acts, rews, dones, infos, lengths, idxes = super().sample(batch_size)
+    def sample(self, batch_size, idxes=None):
+        obss, h_states, acts, rews, dones, infos, lengths, idxes = super().sample(batch_size, idxes)
         return self._convert_batch_to_torch(obss, h_states, acts, rews, dones, infos, lengths)
 
-    def sample_with_next_obs(self, batch_size, next_obs, next_h_state=None):
-        obss, h_states, acts, rews, dones, next_obss, next_h_states, infos, lengths, _ = super().sample_with_next_obs(batch_size, next_obs, next_h_state)
+    def sample_with_next_obs(self, batch_size, next_obs, next_h_state=None, idxes=None):
+        obss, h_states, acts, rews, dones, next_obss, next_h_states, infos, lengths, _ = super().sample_with_next_obs(batch_size, next_obs, next_h_state, idxes)
         obss, h_states, acts, rews, dones, infos, lengths = self._convert_batch_to_torch(obss, h_states, acts, rews, dones, infos, lengths)
         next_obss = torch.as_tensor(next_obss).float()
         next_h_states = torch.as_tensor(next_h_states)
