@@ -5,11 +5,11 @@ class BufferWrapper(Buffer):
     def __init__(self, buffer):
         self.buffer = buffer
 
-    def sample(self, batch_size):
-        return self.buffer.sample(batch_size)
+    def sample(self, batch_size, idxes=None):
+        return self.buffer.sample(batch_size, idxes)
 
-    def sample_with_next_obs(self, batch_size, next_obs, next_h_state=None):
-        return self.buffer.sample_with_next_obs(batch_size, next_obs, next_h_state)
+    def sample_with_next_obs(self, batch_size, next_obs, next_h_state=None, idxes=None):
+        return self.buffer.sample_with_next_obs(batch_size, next_obs, next_h_state, idxes)
 
     def sample_consecutive(self, batch_size, end_with_done=False):
         return self.buffer.sample_consecutive(batch_size, end_with_done)
