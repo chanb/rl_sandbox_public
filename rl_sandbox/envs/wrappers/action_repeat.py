@@ -32,8 +32,8 @@ class ActionRepeatWrapper:
 
         return obs, cum_reward, done, infos
 
-    def render(self):
-        self._env.render()
+    def render(self, **kwargs):
+        self._env.render(**kwargs)
 
     def seed(self, seed):
         self._env.seed(seed)

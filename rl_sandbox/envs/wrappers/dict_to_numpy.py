@@ -2,7 +2,8 @@ import numpy as np
 
 from copy import deepcopy
 
-from rl_sandbox.constants import ORIGINAL_OBS
+from rl_sandbox.constants import ORIGINAL_OBS, WINDOW
+
 
 class DictToNumPyWrapper:
     def __init__(self, env, keys, preprocess=dict()):
@@ -30,8 +31,8 @@ class DictToNumPyWrapper:
         info[ORIGINAL_OBS] = deepcopy(self._obs)
         return self._get_obs(), reward, done, info
 
-    def render(self):
-        self._env.render()
+    def render(self, **kwargs):
+        self._env.render(**kwargs)
 
     def seed(self, seed):
         pass
