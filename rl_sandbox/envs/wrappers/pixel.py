@@ -19,8 +19,8 @@ class PixelWrapper:
     def step(self, action):
         raise NotImplementedError
 
-    def render(self):
-        self._env.render()
+    def render(self, **kwargs):
+        self._env.render(**kwargs)
 
     def seed(self, seed):
         pass

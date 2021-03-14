@@ -26,8 +26,8 @@ class FrameStackWrapper:
 
         return self._get_obs(), reward, done, info
 
-    def render(self):
-        self._env.render()
+    def render(self, **kwargs):
+        self._env.render(**kwargs)
 
     def seed(self, seed):
         self._env.seed(seed)

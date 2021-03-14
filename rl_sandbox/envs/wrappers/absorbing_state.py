@@ -9,6 +9,7 @@ class AbsorbingStateWrapper:
         self._obs = None
         self._max_episode_length = max_episode_length
         self._create_absorbing_state = create_absorbing_state
+        self._prev_info = None
 
     def _get_obs(self):
         if self._done:
@@ -26,18 +27,26 @@ class AbsorbingStateWrapper:
     def step(self, action):
         self._curr_timestep += 1
         if self._create_absorbing_state and self._done:
-            return self._get_obs(), 0., True, {c.ABSORBING_STATE: True, c.DONE: False}
+            return self._get_obs(), 0., True, {**self._prev_info, c.ABSORBING_STATE: True, c.DONE: False}
 
         self._obs, reward, done, info = self._env.step(action)
+        self._prev_info = info
         info[c.ABSORBING_STATE] = False
         info[c.DONE] = done
         if self._create_absorbing_state and self._curr_timestep < self._max_episode_length and done:
             self._done = True
-            done = False
+            done = False  # otherwise env will reset without getting next absorbing state
         return self._get_obs(), reward, done, info
 
-    def render(self):
-        self._env.render()
+    def render(self, **kwargs):
+        self._env.render(**kwargs)
 
     def seed(self, seed):
         self._env.seed(seed)
+
+
+def check_absorbing(config):
+    for wrapper in config[c.ENV_SETTING][c.ENV_WRAPPERS]:
+        if wrapper[c.WRAPPER] == AbsorbingStateWrapper:
+            return True
+    return False
