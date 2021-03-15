@@ -93,7 +93,7 @@ class AlgaeDICE:
         return state_dict
 
     def load_state_dict(self, state_dict):
-        self._model.load_state_dict(state_dict[c.STATE_DICT])
+        self.model.load_state_dict(state_dict[c.STATE_DICT])
         self.policy_opt.load_state_dict(state_dict[c.POLICY_OPTIMIZER])
         self.qs_opt.load_state_dict(state_dict[c.QS_OPTIMIZER])
         self.alpha_opt.load_state_dict(state_dict[c.ALPHA_OPTIMIZER])

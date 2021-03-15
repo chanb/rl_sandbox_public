@@ -67,7 +67,7 @@ class BC:
         return state_dict
 
     def load_state_dict(self, state_dict):
-        self._model.load_state_dict(state_dict[c.STATE_DICT])
+        self.model.load_state_dict(state_dict[c.STATE_DICT])
         self._optimizer.load_state_dict(state_dict[c.OPTIMIZER])
         self._aux_tasks.load_state_dict(state_dict[c.AUXILIARY_TASKS])
 
