@@ -3,10 +3,12 @@ import numpy as np
 
 from gym.wrappers.pixel_observation import PixelObservationWrapper
 
+from rl_sandbox.envs.wrappers.wrapper import Wrapper
 
-class PixelWrapper:
+
+class PixelWrapper(Wrapper):
     def __init__(self, env, render_h=84, render_w=84):
-        self._env = env
+        super().__init__(env)
         self.render_h = render_h
         self.render_w = render_w
 

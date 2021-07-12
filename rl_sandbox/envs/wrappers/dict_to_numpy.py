@@ -3,12 +3,13 @@ import numpy as np
 from copy import deepcopy
 
 from rl_sandbox.constants import ORIGINAL_OBS, WINDOW
+from rl_sandbox.envs.wrappers.wrapper import Wrapper
 
 
-class DictToNumPyWrapper:
+class DictToNumPyWrapper(Wrapper):
     def __init__(self, env, keys, preprocess=dict()):
         assert len(keys)
-        self._env = env
+        super().__init__(env)
         self._obs = None
         self._keys = keys
         self._preprocess = preprocess

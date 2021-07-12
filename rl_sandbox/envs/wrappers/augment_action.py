@@ -2,11 +2,13 @@ import numpy as np
 
 import rl_sandbox.constants as c
 
+from rl_sandbox.envs.wrappers.wrapper import Wrapper
 
-class AugmentActionWrapper:
+
+class AugmentActionWrapper(Wrapper):
     def __init__(self, env, action_dim):
         assert action_dim > 0
-        self._env = env
+        super().__init__(env)
         self._action_dim = action_dim
 
     def reset(self):

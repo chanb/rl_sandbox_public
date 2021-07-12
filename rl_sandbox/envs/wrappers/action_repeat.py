@@ -11,6 +11,9 @@ class ActionRepeatWrapper:
         self._enable_discounting = enable_discounting
         self._discount_factor = discount_factor if enable_discounting else 1.
 
+    def __getattr__(self, attr):
+        return getattr(self._env, attr)
+
     def reset(self):
         return self._env.reset()
 
