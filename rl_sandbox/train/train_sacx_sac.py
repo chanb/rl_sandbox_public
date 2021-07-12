@@ -24,7 +24,7 @@ def train_sacx_sac(experiment_config):
     evaluation_env = None
     if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
         evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
-    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
+    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
 
     intentions = make_model(experiment_config[c.INTENTIONS_SETTING])
     policy_opt = make_optimizer(intentions.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.INTENTIONS])

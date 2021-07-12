@@ -62,7 +62,7 @@ class SumTree:
         return tree_idx, self.tree[tree_idx]
 
 
-def make_buffer(buffer_cfg, seed=None):
+def make_buffer(buffer_cfg, seed=None, load_buffer=False):
     if seed is None:
         seed = np.random.randint(0, 2 ** 32 - 1)
 
@@ -80,5 +80,8 @@ def make_buffer(buffer_cfg, seed=None):
 
     for wrapper_config in buffer_cfg[c.BUFFER_WRAPPERS]:
         buffer = wrapper_config[c.WRAPPER](buffer, **wrapper_config[c.KWARGS])
+
+    if load_buffer:
+        buffer.load(load_buffer)
 
     return buffer

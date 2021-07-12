@@ -27,7 +27,7 @@ def train_sac_diayn(experiment_config):
     model = make_model(experiment_config[c.MODEL_SETTING])
     discriminator = make_model(experiment_config[c.DISCRIMINATOR_SETTING])
     prior = experiment_config[c.PRIOR]
-    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
+    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
 
     policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
     qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])

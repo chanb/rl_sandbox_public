@@ -186,7 +186,7 @@ class LSTMSquashedGaussianSAC(SquashedGaussianSoftActorCritic, LSTMActorCritic):
         action = dist.rsample()
         t_action = self._squash_gaussian(action)
         log_prob = self._lprob(dist, action, t_action)
-        return action, log_prob
+        return t_action, log_prob
 
     def flatten_parameters(self):
         self.lstm_layer.flatten_parameters()
