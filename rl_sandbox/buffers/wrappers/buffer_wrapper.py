@@ -45,3 +45,6 @@ class BufferWrapper(Buffer):
 
     def close(self):
         return self.buffer.close()
+
+    def __getattr__(self, attr):
+        return getattr(self.buffer, attr)

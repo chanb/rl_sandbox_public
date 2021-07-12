@@ -50,7 +50,7 @@ class NumPyBuffer(Buffer):
             self.padding_first = padding_first
             self.historic_observations = np.zeros(shape=(burn_in_window, *obs_dim), dtype=dtype)
             self.historic_hidden_states = np.zeros(shape=(burn_in_window, *h_state_dim), dtype=dtype)
-            self.historic_dones = np.zeros(shape=(burn_in_window, 1), dtype=np.bool)
+            self.historic_dones = np.ones(shape=(burn_in_window, 1), dtype=np.bool)
 
         self._checkpoint_interval = checkpoint_interval
         self._checkpoint_idxes = np.ones(shape=memory_size, dtype=np.bool)
@@ -116,7 +116,7 @@ class NumPyBuffer(Buffer):
 
     def push(self, obs, h_state, act, rew, done, info, **kwargs):
         # Stores the overwritten observation and hidden state into historic variables
-        if self.burn_in_window > 0:
+        if self.burn_in_window > 0 and self._count >= self._memory_size:
             self.historic_observations = np.concatenate(
                 (self.historic_observations[1:], [self.observations[self._pointer]]))
             self.historic_hidden_states = np.concatenate(
@@ -146,6 +146,10 @@ class NumPyBuffer(Buffer):
         self._pointer = 0
         self._count = 0
         self._checkpoint_idxes.fill(1)
+        if self.burn_in_window > 0:
+            self.historic_observations.fill(0.)
+            self.historic_hidden_states.fill(0.)
+            self.historic_dones.fill(1)
 
     def _get_burn_in_window(self, idxes):
         historic_observations = np.zeros((len(idxes), self.burn_in_window, *self.observations.shape[1:]))
@@ -154,24 +158,31 @@ class NumPyBuffer(Buffer):
         lengths = np.zeros(len(idxes), dtype=np.int)
 
         for ii in range(1, self.burn_in_window + 1):
-            shifted_idxes = idxes - self._pointer - ii
-            historic_idxes = np.logical_and(idxes - self._pointer - ii >= -self.burn_in_window, shifted_idxes < 0).astype(np.int)
+            shifted_idxes = (idxes - self._pointer) % len(self) - ii
+
+            # Determine which index needs to look into historic buffer
+            historic_idxes = (self._count > self._memory_size) * np.logical_and(shifted_idxes >= -self.burn_in_window, shifted_idxes < 0).astype(np.int)
             non_historic_idxes = 1 - historic_idxes
 
+            # Check whether we have reached another episode
             not_dones[np.where(self.dones[idxes - ii, 0] * non_historic_idxes)] = 0
-            not_dones[np.where(self.historic_dones[-ii, 0] * historic_idxes)] = 0
+            not_dones[np.where(self.historic_dones[shifted_idxes * historic_idxes, 0] * historic_idxes)] = 0
+            if self._count <= self._memory_size:
+                not_dones[np.where(idxes - ii < 0)] = 0
+
             non_historic_not_dones = not_dones * non_historic_idxes
             historic_not_dones = not_dones * historic_idxes
 
+            # Update for transitions not looking into historic buffer
             historic_observations[:, -ii] += self.observations[idxes - ii] * non_historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
             historic_hidden_states[:, -ii] += self.hidden_states[idxes - ii] * non_historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
             lengths += 1 * non_historic_not_dones
 
+            # Update for transitions looking into historic buffer
             if self._count > self._memory_size:
-                historic_observations[:, -ii] += self.historic_observations[-self._pointer - ii] * historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
-                historic_hidden_states[:, -ii] += self.historic_hidden_states[-self._pointer - ii] * historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
+                historic_observations[:, -ii] += self.historic_observations[shifted_idxes * historic_not_dones] * historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
+                historic_hidden_states[:, -ii] += self.historic_hidden_states[shifted_idxes * historic_not_dones] * historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
                 lengths += 1 * historic_not_dones
-
         return historic_observations, historic_hidden_states, lengths
 
     def get_transitions(self, idxes):
