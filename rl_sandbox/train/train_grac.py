@@ -35,7 +35,7 @@ def train_grac(experiment_config):
     #                                                            min_action=experiment_config[c.MIN_ACTION],
     #                                                            max_action=experiment_config[c.MAX_ACTION])
     model = make_model(experiment_config[c.MODEL_SETTING])
-    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
+    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
 
     # policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING])
     policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])

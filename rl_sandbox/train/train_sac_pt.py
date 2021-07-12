@@ -22,7 +22,7 @@ def train_sac_pt(experiment_config):
     train_env = make_env(experiment_config[c.ENV_SETTING], seed)
     evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
     model = make_model(experiment_config[c.MODEL_SETTING])
-    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
+    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
 
     assert isinstance(buffer, TorchPrioritizedExperienceReplay)
 

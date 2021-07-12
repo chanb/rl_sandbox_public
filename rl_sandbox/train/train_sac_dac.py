@@ -24,7 +24,7 @@ def train_sac_dac(experiment_config):
     if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
         evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
     model = make_model(experiment_config[c.MODEL_SETTING])
-    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
+    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
 
     policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
     qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])
@@ -44,8 +44,7 @@ def train_sac_dac(experiment_config):
                                 algo_params=experiment_config,
                                 aux_tasks=aux_tasks)
 
-    expert_buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed)
-    expert_buffer.load(experiment_config[c.EXPERT_BUFFER])
+    expert_buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.EXPERT_BUFFER])
     discriminator = make_model(experiment_config[c.DISCRIMINATOR_SETTING])
     discriminator_opt = make_optimizer(discriminator.parameters(), experiment_config[c.OPTIMIZER_SETTING][c.DISCRIMINATOR])
     dac = DAC(discriminator=discriminator,
