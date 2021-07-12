@@ -2,28 +2,15 @@ import numpy as np
 import pygame
 
 from rl_sandbox.constants import RGB_ARRAY, WINDOW
+from rl_sandbox.envs.wrappers.wrapper import Wrapper
 
 
-class Renderer:
+class Renderer(Wrapper):
     def __init__(self, env, render_h=256, render_w=256):
-        self._env = env
+        super().__init__(env)
         self.render_h = render_h
         self.render_w = render_w
         self.pitch = self.render_w * -3
-
-    def render(self, **kwargs):
-        if not hasattr(self, WINDOW):
-            pygame.init()
-            self.window = pygame.display.set_mode((self.render_w, self.render_h), pygame.RESIZABLE)
-            pygame.display.set_caption('Gym')
-        pixels = np.transpose(self._env.render(render_mode), (1, 0, 2))
-        
-        cur_size = self.window.get_size()
-        render_img_rect = pygame.Rect((0, 0), (cur_size[0], cur_size[1]))
-        disp_img = pygame.transform.scale(pygame.surfarray.make_surface(pixels),
-                                            render_img_rect.size).convert()
-        self.window.blit(disp_img, (0, 0))
-        pygame.display.flip()
 
     def reset(self):
         return self._env.reset()

@@ -2,9 +2,12 @@ import numpy as np
 
 import rl_sandbox.constants as c
 
-class AbsorbingStateWrapper:
+from rl_sandbox.envs.wrappers.wrapper import Wrapper
+
+
+class AbsorbingStateWrapper(Wrapper):
     def __init__(self, env, create_absorbing_state, max_episode_length):
-        self._env = env
+        super().__init__(env)
         self._done = False
         self._obs = None
         self._max_episode_length = max_episode_length

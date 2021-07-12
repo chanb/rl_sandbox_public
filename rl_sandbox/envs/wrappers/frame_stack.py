@@ -2,10 +2,13 @@ import numpy as np
 
 from collections import deque
 
-class FrameStackWrapper:
+from rl_sandbox.envs.wrappers.wrapper import Wrapper
+
+
+class FrameStackWrapper(Wrapper):
     def __init__(self, env, num_frames):
         assert num_frames > 0
-        self._env = env
+        super().__init__(env)
         self._num_frames = num_frames
         self.frames = deque([], maxlen=num_frames)
 
