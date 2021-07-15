@@ -28,6 +28,7 @@ SAC = "sac"
 SACX = "sacx"
 SAC_DIAYN = "sac_diayn"
 SAC_DRQ = "sac_drq"
+SAC_FR = "sac_fr"
 SAC_PER = "sac_per"
 SAC_PT = "sac_pt"
 VARIANT = "variant"
@@ -80,16 +81,20 @@ TASK_NAME = "task_name"
 WRAPPER = "wrapper"
 
 # General
+COEFFICIENTS = "coefficients"
 GT = "gt"
 IMG = "img"
 KEYS = "keys"
 KWARGS = "kwargs"
+MAX_INT = 2 ** 32 - 1
 
 # General Training
 ACCUM_NUM_GRAD = "accum_num_grad"
 BATCH_SIZE = "batch_size"
 BUFFER_PREPROCESSING = "buffer_preprocessing"
+EVALUATION = "evaluation"
 EVALUATION_PREPROCESSING = "evaluation_preprocessing"
+LEARNING_ALGORITHM = "learning_algorithm"
 MAX_GRAD_NORM = "max_grad_norm"
 NUM_GRADIENT_UPDATES = "num_gradient_updates"
 NUM_UPDATES = "num_updates"
@@ -98,9 +103,11 @@ OPTIMIZER_SETTING = "optimizer_setting"
 PREPROCESS = "preprocess"
 REWARD_SCALING = "reward_scaling"
 RNG = "rng"
+OVERFIT_TOLERANCE = "overfit_tolerance"
 STEPS_BETWEEN_UPDATE = "steps_between_update"
 RANDOM = "random"
 SEED = "seed"
+TRAIN = "train"
 TRAIN_PREPROCESSING = "train_preprocessing"
 UPDATE_NUM = "update_num"
 
@@ -118,6 +125,8 @@ RENDER_W = "render_w"
 HIGH_LEVEL_ACTION = "high_level_action"
 HIGH_LEVEL_HIDDEN_STATE = "high_level_hidden_state"
 HIGH_LEVEL_OBSERVATION = "high_level_observation"
+HIGH_LEVEL_POLICY = "high_level_policy"
+LOW_LEVEL_POLICY = "low_level_policy"
 NUM_TASKS = "num_tasks"
 
 # Image
@@ -161,6 +170,7 @@ MODEL_ARCHITECTURES = "model_architectures"
 RNN = "rnn"
 SEPARATE = "separate"
 SHARED = "shared"
+SPECTRAL = "spectral"
 
 # Observation Normalization
 NORMALIZE_OBS = "normalize_obs"
@@ -336,7 +346,15 @@ LOSS_COEF = "loss_coef"
 ALGAE_ALPHA = "algae_alpha"
 CRITIC_MIXTURE_RATIO = "critic_mixture_ratio"
 
+# Behavior Cloning
+MAX_EPOCHS = "max_epochs"
+MAX_EPOCHS_WITHOUT_BEST = "max_epochs_without_best"
+EPOCH_TRAIN_LOSS = "epoch_train_loss"
+EPOCH_TRAIN_TIME = "epoch_train_time"
+EPOCH_VALID_TIME = "epoch_valid_time"
+
 # CEM
+ELITES = "elites"
 ELITE_SIZE = "elite_size"
 POP_SIZE = "pop_size"
 
@@ -365,6 +383,9 @@ TASK = "task"
 # DrQ
 K = "K"
 M = "M"
+
+# Functional Regularization
+KAPPA = "kappa"
 
 # GAE
 GAE_LAMBDA = "gae_lambda"
@@ -454,9 +475,11 @@ TARGET_ENTROPY = "target_entropy"
 # SAC-X
 AUXILIARY_REWARDS = "auxiliary_rewards"
 INTENTIONS = "intentions"
+INTENTION_I = "intention_i"
 INTENTIONS_ALGO = "intentions_algo"
 INTENTIONS_SETTING = "intentions_setting"
 INTENTIONS_UPDATE_TIME = "intentions_update_time"
+MAIN_INTENTION = "main_intention"
 MAX_SCHEDULE = "max_schedule"
 SCHEDULER = "scheduler"
 SCHEDULER_PERIOD = "scheduler_period"
@@ -466,6 +489,7 @@ SCHEDULER_TEMPERATURE_DECAY = "scheduler_temperature_decay"
 SCHEDULER_TEMPERATURE_MIN = "scheduler_temperature_min"
 SCHEDULER_TAU = "scheduler_tau"
 SCHEDULER_UPDATE_TIME = "scheduler_update_time"
+SCHEDULING = "scheduling"
 TEMPERATURE = "temperature"
 TEMPERATURE_DECAY = "temperature_decay"
 TEMPERATURE_MIN = "temperature_min"
@@ -493,7 +517,7 @@ DEFAULT_TRAIN_PARAMS = {
     CHECKPOINT_PATH: 'checkpoints/',
     PRINT_INTERVAL: 100,
     SAVE_INTERVAL: 5,
-    LOG_INTERVAL: 1,
+    LOG_INTERVAL: 100,
 
     # Progress Tracking
     CUM_EPISODE_LENGTHS: [0],
@@ -521,6 +545,9 @@ DEFAULT_BC_PARAMS = {
     STEPS_BETWEEN_UPDATE: 1000,
     MAX_GRAD_NORM: 1e10,
     VALIDATION_RATIO: 0.3,
+    MAX_EPOCHS: 1000,
+    MAX_EPOCHS_WITHOUT_BEST: 30,
+    OVERFIT_TOLERANCE: 30,
 }
 
 # DIAYN
@@ -532,6 +559,11 @@ DEFAULT_DIAYN_PARAMS = {
 DEFAULT_DRQ_PARAMS = {
     M: 2,
     K: 2,
+}
+
+# Functional Regularization
+DEFAULT_FR_PARAMS = {
+    KAPPA: 0.1,
 }
 
 # GRAC
@@ -573,6 +605,7 @@ DEFAULT_MBPO_PARAMS = {
     STEPS_BETWEEN_UPDATE: 1000,
     M: 400,
     K: 1,
+    OVERFIT_TOLERANCE: 30,
 }
 
 # PER

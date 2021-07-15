@@ -60,10 +60,12 @@ class SACDAC(SAC):
         update_info[c.ALPHA_UPDATE_TIME].append(timeit.default_timer() - tic)
         update_info[c.ALPHA_LOSS].append(total_alpha_loss.numpy())
 
-    def update(self, reward_function, next_obs, next_h_state):
+    def update(self, curr_obs, reward_function, next_obs, next_h_state):
         self.step += 1
 
         update_info = {}
+        if hasattr(self.model, c.OBS_RMS):
+            self.model.obs_rms.update(self.eval_preprocessing(torch.tensor(curr_obs)))
 
         # Perform SAC update
         if self.step >= self._buffer_warmup and self.step % self._steps_between_update == 0:
@@ -85,9 +87,6 @@ class SACDAC(SAC):
                 
                 obss = self.train_preprocessing(obss)
                 next_obss = self.train_preprocessing(next_obss)
-
-                if hasattr(self.model, c.OBS_RMS):
-                    self.model.obs_rms.update(obss)
 
                 # NOTE: This computes the new reward using the provided reward function (discriminator)
                 with torch.no_grad():

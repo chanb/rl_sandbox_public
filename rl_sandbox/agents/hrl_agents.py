@@ -42,7 +42,6 @@ class SACXAgent(HierarchicalRLAgent):
                          preprocess=preprocess)
         assert scheduler_period > 0
         self._scheduler_period = scheduler_period
-        self.use_intention(intention=0)
 
     def compute_action(self, obs, hidden_state):
         if self._curr_timestep % self._scheduler_period == 0:
@@ -72,13 +71,27 @@ class SACXAgent(HierarchicalRLAgent):
         return action[self.curr_high_level_act], hidden_state, act_info
 
     def deterministic_action(self, obs, hidden_state):
+        if self._curr_timestep % self._scheduler_period == 0:
+            if self.curr_high_level_obs is not None:
+                self.curr_high_level_obs.append(self.curr_high_level_act.item())
+            else:
+                self.curr_high_level_obs = []
+
+            self.curr_high_level_act, self.curr_high_level_value, self.curr_high_level_h_state, \
+                self.curr_high_level_log_prob, self.curr_high_level_entropy = \
+                    self.high_level_model.deterministic_action(self.curr_high_level_obs, torch.tensor(self.curr_high_level_h_state))
+            high_level_act_info = {c.VALUE: self.curr_high_level_value,
+                                   c.LOG_PROB: self.curr_high_level_log_prob,
+                                   c.ENTROPY: self.curr_high_level_entropy}
+
         action, hidden_state, act_info = super().deterministic_action(obs, hidden_state)
-        act_info[c.LOG_PROB] = act_info[c.LOG_PROB][self._use_intention]
-        act_info[c.VALUE] = act_info[c.VALUE][self._use_intention]
-        act_info[c.ENTROPY] = act_info[c.ENTROPY][self._use_intention]
+        act_info[c.LOG_PROB] = act_info[c.LOG_PROB][self.curr_high_level_act]
+        act_info[c.VALUE] = act_info[c.VALUE][self.curr_high_level_act]
+        act_info[c.ENTROPY] = act_info[c.ENTROPY][self.curr_high_level_act]
 
         # Use the action from the main task
-        return action[self._use_intention], hidden_state, act_info
+        self._curr_timestep += 1
+        return action[self.curr_high_level_act], hidden_state, act_info
 
     def reset(self):
         self._curr_timestep = 0
@@ -91,9 +104,6 @@ class SACXAgent(HierarchicalRLAgent):
         self.curr_high_level_mean = None
         self.curr_high_level_variance = None
         return super().reset()
-
-    def use_intention(self, intention):
-        self._use_intention = intention
 
 
 class DIAYNAgent(HierarchicalRLAgent):

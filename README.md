@@ -21,6 +21,7 @@ pip install -e .
 
 ## Algorithms
 The following is the list of algorithms that this repository currently support:
+- Behavioral Cloning (BC)
 - Proximal Policy Optimization (PPO): https://arxiv.org/abs/1707.06347
 - Soft Actor Critic (SAC): https://arxiv.org/abs/1801.01290
 - Scheduled Auxiliary Control (SAC-X): https://arxiv.org/abs/1802.10567
@@ -32,6 +33,8 @@ The following is the list of algorithms that this repository currently support:
   - NOTE: We use SAC for the off-policy algorithm
 - Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973
   - NOTE: The implementation is slightly different, please see here for some of our conversations: https://github.com/stanford-iprl-lab/GRAC/issues/1
+- Beyond Target Networks: Improving Deep Q-learning with Functional Regularization: https://arxiv.org/abs/2106.02613
+- Learning Values Across Many Orders of Magnitude (PopArt): https://arxiv.org/abs/1602.07714
 
 ## Replay Buffers
 The following is the list of supported experience replay:
@@ -59,7 +62,7 @@ This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` dir
 - DeepMind Control Suite: https://github.com/deepmind/dm_control
 
 ## Benchmarking Results
-Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. For every 5000 timesteps, we evaluate the agent in a separate copy of the environment and execute 5 trials. The plot displays the average returns and the standard deviation. To generate the plot, you may run the script `${RL_SANDBOX_PATH}/rl_sandbox/examples/plot_evaluations.py`
+Each algorithm is trained for 1 million timesteps, with `seeds=( 1 2 3 4 5 )`. For every 5000 timesteps, we evaluate the agent in a separate copy of the environment and execute 5 trials. The plot displays the average returns and the standard deviation. To generate the plot, you may run the script `${RL_SANDBOX_PATH}/rl_sandbox/examples/evalatuion_tools/plot_evaluations.py`
 
 ### Hopper-v2
 #### PPO

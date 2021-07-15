@@ -143,6 +143,9 @@ class RunningMeanStd():
         batch_var = torch.var(x, dim=self.norm_dim)
         batch_count = int(torch.prod(torch.tensor(
             [x.shape[dim] for dim in self.norm_dim])))
+
+        if batch_count == 1:
+            batch_var.fill_(0.)
         self.update_from_moments(batch_mean, batch_var, batch_count)
 
     def update_from_moments(self, batch_mean, batch_var, batch_count):

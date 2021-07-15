@@ -122,8 +122,6 @@ class LSTMSquashedGaussianSAC(SquashedGaussianSoftActorCritic, LSTMActorCritic):
                                   batch_first=True)
         self._policy = nn.Sequential(nn.Linear(self.hidden_state_dim, 256),
                                      nn.ReLU(),
-                                     nn.Linear(256, 256),
-                                     nn.ReLU(),
                                      nn.Linear(256, action_dim * 2))
         self._q1 = nn.Sequential(nn.Linear(self.hidden_state_dim + action_dim, 256),
                                  nn.ReLU(),
@@ -143,11 +141,11 @@ class LSTMSquashedGaussianSAC(SquashedGaussianSoftActorCritic, LSTMActorCritic):
 
     @property
     def policy_parameters(self):
-        return list(super().policy_parameters) + list(self._shared_network.parameters()) + list(self.lstm_layer.parameters())
+        return list(super().policy_parameters)
 
     @property
     def qs_parameters(self):
-        return super().qs_parameters
+        return super().qs_parameters + list(self._shared_network.parameters()) + list(self.lstm_layer.parameters())
 
     @property
     def soft_update_parameters(self):

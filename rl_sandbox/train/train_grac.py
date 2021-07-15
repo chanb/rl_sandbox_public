@@ -20,9 +20,6 @@ def train_grac(experiment_config):
 
     set_seed(seed)
     train_env = make_env(experiment_config[c.ENV_SETTING], seed)
-    evaluation_env = None
-    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
-        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
     # experiment_config[c.MODEL_SETTING][c.KWARGS][c.CEM] = CEMQ(cov_noise_init=experiment_config[c.COV_NOISE_INIT],
     #                                                            cov_noise_end=experiment_config[c.COV_NOISE_END],
     #                                                            cov_noise_tau=experiment_config[c.COV_NOISE_TAU],
@@ -60,9 +57,13 @@ def train_grac(experiment_config):
     agent = ACAgent(model=model,
                     learning_algorithm=learning_algorithm,
                     preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
-    evaluation_agent = ACAgent(model=model,
-                               learning_algorithm=None,
-                               preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
+    evaluation_env = None
+    evaluation_agent = None
+    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
+        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
+        evaluation_agent = ACAgent(model=model,
+                                   learning_algorithm=None,
+                                   preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
 
     summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.GRAC, cfg=experiment_config)
     train(agent=agent,

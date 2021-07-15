@@ -179,6 +179,7 @@ experiment_setting = {
     c.RETURNS: [],
 
     # Save
+    # c.SAVE_PATH: "../results/pybullet/hopper/gt-sac-separate",
     c.SAVE_PATH: "./experts/hopper-v2/gt-sac-separate",
 
     # train parameters

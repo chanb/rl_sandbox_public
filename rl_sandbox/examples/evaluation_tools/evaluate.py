@@ -12,13 +12,12 @@ python evaluate.py --seed=0 --model_path=./state_dict.pt \
     --config_path=./experiment_setting.pkl --num_episodes=5
 """
 
-import _pickle as pickle
 import argparse
-import torch
+import numpy as np
 
 import rl_sandbox.constants as c
 
-from rl_sandbox.examples.utils import load_model
+from rl_sandbox.examples.evaluation_tools.utils import load_model
 from rl_sandbox.learning_utils import evaluate_policy
 from rl_sandbox.utils import set_seed
 
@@ -30,20 +29,27 @@ def evaluate(args):
     config, env, buffer_preprocessing, agent = load_model(args.seed,
                                                           args.config_path,
                                                           args.model_path,
+                                                          args.device,
                                                           args.intention)
+    if c.AUXILIARY_REWARDS in config:
+        auxiliary_reward = config[c.AUXILIARY_REWARDS].reward
+    else:
+        auxiliary_reward = lambda reward, **kwargs: np.array([reward])
 
-    (ret_mean, ret_std) = evaluate_policy(agent=agent,
-                                          env=env,
-                                          buffer_preprocess=buffer_preprocessing,
-                                          num_episodes=args.num_episodes,
-                                          clip_action=config[c.CLIP_ACTION],
-                                          min_action=config[c.MIN_ACTION],
-                                          max_action=config[c.MAX_ACTION],
-                                          render=True,)
+    rets = evaluate_policy(agent=agent,
+                           env=env,
+                           buffer_preprocess=buffer_preprocessing,
+                           num_episodes=args.num_episodes,
+                           clip_action=config[c.CLIP_ACTION],
+                           min_action=config[c.MIN_ACTION],
+                           max_action=config[c.MAX_ACTION],
+                           render=args.render,
+                           auxiliary_reward=auxiliary_reward,
+                           verbose=True,)
 
     print("=" * 100)
     print("Interacted with {} episodes".format(args.num_episodes))
-    print("Average Return: {} - Std: {}".format(ret_mean, ret_std))
+    print("Average Return: {} - Std: {}".format(np.mean(rets, axis=1), np.std(rets, axis=1)))
 
 
 if __name__ == "__main__":
@@ -53,6 +59,8 @@ if __name__ == "__main__":
     parser.add_argument("--config_path", required=True, type=str, help="The path to load the config that trained the model")
     parser.add_argument("--num_episodes", required=True, type=int, help="The maximum number of episodes")
     parser.add_argument("--intention", type=int, default=0, help="The intention to use for SAC-X")
+    parser.add_argument("--render", action="store_true", help="Whether or not to render")
+    parser.add_argument("--device", type=str, help="Device to load models on")
     args = parser.parse_args()
 
     evaluate(args)

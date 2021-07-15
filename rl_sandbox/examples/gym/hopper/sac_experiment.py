@@ -125,8 +125,8 @@ experiment_setting = {
             c.SHARED_LAYERS: VALUE_BASED_LINEAR_LAYERS(in_dim=obs_dim),
             c.INITIAL_ALPHA: 1.,
             c.DEVICE: device,
-            c.NORMALIZE_OBS: False,
-            c.NORMALIZE_VALUE: False,
+            c.NORMALIZE_OBS: True,
+            c.NORMALIZE_VALUE: True,
         },
     },
     

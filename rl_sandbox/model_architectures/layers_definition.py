@@ -1,6 +1,7 @@
 import torch.nn as nn
 
 import rl_sandbox.constants as c
+import rl_sandbox.model_architectures.shared as snn
 
 
 NATURE_CNN_ENCODER = lambda in_channels: (
@@ -48,4 +49,11 @@ DISCRIMINATOR_LINEAR_LAYERS = lambda in_dim: (
 SAC_DISCRIMINATOR_LINEAR_LAYERS = lambda in_dim: (
     [in_dim,  256,      nn.Tanh(), True, 0],
     [256,     256,      nn.Tanh(), True, 0],
+)
+
+MBPO_DYNAMICS_LINEAR_LAYERS = lambda in_dim: (
+    [in_dim,  200,      snn.Swish(), True, 0],
+    [200,     200,      snn.Swish(), True, 0],
+    [200,     200,      snn.Swish(), True, 0],
+    [200,     200,      snn.Swish(), True, 0],
 )

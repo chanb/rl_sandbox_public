@@ -103,7 +103,7 @@ experiment_setting = {
 
     # Evaluation
     c.EVALUATION_FREQUENCY: 5000,
-    c.EVALUATION_RENDER: True,
+    c.EVALUATION_RENDER: False,
     c.EVALUATION_RETURNS: [],
     c.NUM_EVALUATION_EPISODES: 5,
     

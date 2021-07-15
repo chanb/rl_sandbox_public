@@ -41,9 +41,9 @@ class ACAgent(RLAgent):
         return obs
 
     def compute_action(self, obs, hidden_state):
-        obs = torch.tensor(obs).unsqueeze(0)
+        obs = torch.tensor([obs])
         obs = self.preprocess(obs)
-        hidden_state = torch.tensor(hidden_state).unsqueeze(0)
+        hidden_state = torch.tensor([hidden_state])
         action, value, hidden_state, log_prob, entropy, mean, variance = self.model.compute_action(
             obs, hidden_state)
         act_info = {c.VALUE: value,
@@ -54,9 +54,9 @@ class ACAgent(RLAgent):
         return action, hidden_state, act_info
 
     def deterministic_action(self, obs, hidden_state):
-        obs = torch.tensor(obs).unsqueeze(0)
+        obs = torch.tensor([obs])
         obs = self.preprocess(obs)
-        hidden_state = torch.tensor(hidden_state).unsqueeze(0)
+        hidden_state = torch.tensor([hidden_state])
         action, value, hidden_state, log_prob, entropy = self.model.deterministic_action(
             obs, hidden_state)
         act_info = {c.VALUE: value,

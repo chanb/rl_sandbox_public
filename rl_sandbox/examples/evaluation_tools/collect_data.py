@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 import rl_sandbox.constants as c
 
-from rl_sandbox.examples.utils import load_model
+from rl_sandbox.examples.evaluation_tools.utils import load_model
 from rl_sandbox.learning_utils import evaluate_policy
 from rl_sandbox.utils import set_seed
 
@@ -45,6 +45,7 @@ def collect_data(args):
     config, env, buffer_preprocess, agent = load_model(args.seed,
                                                        args.config_path,
                                                        args.model_path,
+                                                       args.device,
                                                        args.intention)
 
     init_observations = []
@@ -144,6 +145,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_path", required=True, type=str, help="The path to load the model")
     parser.add_argument("--config_path", required=True, type=str, help="The path to load the config that trained the model")
     parser.add_argument("--intention", type=int, default=0, help="The intention to use for SAC-X")
+    parser.add_argument("--device", type=str, help="Device to load models on")
     args = parser.parse_args()
 
     pprint(args)

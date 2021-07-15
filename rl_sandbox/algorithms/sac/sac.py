@@ -65,6 +65,7 @@ class SAC:
             c.MAX_GRAD_NORM, c.DEFAULT_SAC_PARAMS[c.MAX_GRAD_NORM])
 
         self.train_preprocessing = algo_params[c.TRAIN_PREPROCESSING]
+        self.eval_preprocessing = algo_params[c.EVALUATION_PREPROCESSING]
 
         self._initialize_target_network()
 
@@ -104,6 +105,9 @@ class SAC:
             target_param.data.mul_(1. - self._tau)
             target_param.data.add_(param.data * self._tau)
 
+        if hasattr(self.model, c.OBS_RMS):
+            self._target_model.obs_rms = copy.deepcopy(self.model.obs_rms)
+
     def _compute_qs_loss(self, obss, h_states, acts, rews, dones, next_obss, discounting, lengths):
         rews, dones, discounting = rews.to(self.device), dones.to(self.device), discounting.to(self.device)
         _, q1_val, q2_val, next_h_states = self.model.q_vals(obss, h_states, acts, lengths=lengths)
@@ -113,10 +117,11 @@ class SAC:
             _, _, _, targ_next_h_states = self._target_model.q_vals(obss, h_states, acts, lengths=lengths)
             min_q_targ, _, _, _ = self._target_model.q_vals(next_obss, targ_next_h_states, next_acts)
             min_q_targ = min_q_targ.detach()
-            v_next = (min_q_targ - self.model.alpha.detach() * next_lprobs)
 
             if hasattr(self.model, c.VALUE_RMS):
-                v_next = self.model.value_rms.unnormalize(v_next.cpu()).to(self.device)
+                min_q_targ = self.model.value_rms.unnormalize(min_q_targ.cpu()).to(self.device)
+
+            v_next = (min_q_targ - self.model.alpha.detach() * next_lprobs)
 
             target = rews + (self._gamma ** discounting) * (1 - dones) * v_next
 
@@ -211,19 +216,22 @@ class SAC:
             total_alpha_loss += alpha_loss.detach().cpu()
             alpha_loss.backward()
         nn.utils.clip_grad_norm_(self.model.log_alpha,
-                                self._max_grad_norm)
+                                 self._max_grad_norm)
         self.alpha_opt.step()
         update_info[c.ALPHA_UPDATE_TIME].append(timeit.default_timer() - tic)
         update_info[c.ALPHA_LOSS].append(total_alpha_loss.numpy())
 
-    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info):
-        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info)
+    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
+        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info, next_obs=next_obs, next_h_state=next_h_state)
 
     def update(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
-        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info)
+        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state)
         self.step += 1
 
         update_info = {}
+
+        if hasattr(self.model, c.OBS_RMS):
+            self.model.obs_rms.update(self.eval_preprocessing(torch.tensor(curr_obs)))
 
         # Perform SAC update
         if self.step >= self._buffer_warmup and self.step % self._steps_between_update == 0:
@@ -241,14 +249,9 @@ class SAC:
                 tic = timeit.default_timer()
                 obss, h_states, acts, rews, dones, next_obss, next_h_states, infos, lengths = self.buffer.sample_with_next_obs(
                     self._batch_size * self._num_prefetch, next_obs, next_h_state)
-                
+
                 obss = self.train_preprocessing(obss)
                 next_obss = self.train_preprocessing(next_obss)
-
-                if hasattr(self.model, c.OBS_RMS):
-                    idxes = lengths.unsqueeze(-1).repeat(1, *obss.shape[2:]).unsqueeze(1)
-                    x_gather = torch.gather(obss, 1, index=idxes - 1)
-                    self.model.obs_rms.update(x_gather.squeeze(1))
                 rews = rews * self._reward_scaling
                 discounting = infos[c.DISCOUNTING]
                 update_info[c.SAMPLE_TIME].append(timeit.default_timer() - tic)

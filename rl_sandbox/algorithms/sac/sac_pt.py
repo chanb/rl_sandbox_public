@@ -32,10 +32,11 @@ class SACPT(SACPER):
             _, _, _, targ_next_h_states = self._target_model.q_vals(obss, h_states, acts, lengths=lengths)
             min_q_targ, _, _, _ = self._target_model.q_vals(next_obss, targ_next_h_states, next_acts)
             min_q_targ = min_q_targ.detach()
-            v_next = (min_q_targ - self.model.alpha.detach() * next_lprobs)
 
             if hasattr(self.model, c.VALUE_RMS):
-                v_next = self.model.value_rms.unnormalize(v_next.cpu()).to(self.device)
+                min_q_targ = self.model.value_rms.unnormalize(min_q_targ.cpu()).to(self.device)
+
+            v_next = (min_q_targ - self.model.alpha.detach() * next_lprobs)
 
             target = rews + (self._gamma ** discounting) * (1 - dones) * v_next
 
@@ -57,9 +58,9 @@ class SACPT(SACPER):
 
         return q1_loss, q2_loss
 
-    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info):
+    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
         self._episode_step += 1
-        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info, priority=self._episode_step)
+        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info, next_obs=next_obs, next_h_state=next_h_state, priority=self._episode_step)
 
         if done:
             self._episode_step = 0

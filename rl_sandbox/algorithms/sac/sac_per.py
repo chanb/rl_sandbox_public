@@ -29,10 +29,11 @@ class SACPER(SAC):
             _, _, _, targ_next_h_states = self._target_model.q_vals(obss, h_states, acts, lengths=lengths)
             min_q_targ, _, _, _ = self._target_model.q_vals(next_obss, targ_next_h_states, next_acts)
             min_q_targ = min_q_targ.detach()
-            v_next = (min_q_targ - self.model.alpha.detach() * next_lprobs)
 
             if hasattr(self.model, c.VALUE_RMS):
-                v_next = self.model.value_rms.unnormalize(v_next.cpu()).to(self.device)
+                min_q_targ = self.model.value_rms.unnormalize(min_q_targ.cpu()).to(self.device)
+
+            v_next = (min_q_targ - self.model.alpha.detach() * next_lprobs)
 
             target = rews + (self._gamma ** discounting) * (1 - dones) * v_next
 

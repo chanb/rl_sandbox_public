@@ -71,13 +71,11 @@ class UpdateSACDrQIntentions(SACDrQ):
             min_q_targ = torch.gather(min_q_targ, dim=1, index=tasks)
             min_q_targ = min_q_targ.detach()
 
+            if hasattr(self.model, c.VALUE_RMS):
+                min_q_targ = self.model.value_rms.unnormalize(min_q_targ.cpu()).to(self.device)
+
             v_next = (min_q_targ - alpha * next_lprobs).reshape(batch_size, self.K, self._num_tasks)
             v_next = torch.mean(v_next, axis=1, keepdim=True).reshape(task_batch_size, 1)
-
-            if hasattr(self.model, c.VALUE_RMS):
-                v_next = v_next.reshape(batch_size, self._num_tasks).cpu()
-                v_next = self.model.value_rms.unnormalize(v_next)
-                v_next = v_next.to(self.device).reshape(task_batch_size, 1)
 
             target = rews + (self._gamma ** discounting) * (1 - dones) * v_next
             target = target.reshape(batch_size, self._num_tasks)
@@ -162,10 +160,13 @@ class UpdateSACDrQIntentions(SACDrQ):
         update_info[c.Q2_LOSS].append(total_q2_loss.numpy())
 
     def update(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
-        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info)
+        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state)
         self.step += 1
 
         update_info = {}
+
+        if hasattr(self.model, c.OBS_RMS):
+            self.model.obs_rms.update(self.eval_preprocessing(torch.tensor(curr_obs)))
 
         # Perform SAC update
         if self.step >= self._buffer_warmup and self.step % self._steps_between_update == 0:
@@ -185,8 +186,6 @@ class UpdateSACDrQIntentions(SACDrQ):
                     self._batch_size * self._num_prefetch, next_obs, next_h_state)
 
                 eval_obss = self.evaluation_preprocessing(obss)
-                if hasattr(self.model, c.OBS_RMS):
-                    self.model.obs_rms.update(eval_obss)
 
                 rews = rews * self._reward_scaling
                 discounting = infos[c.DISCOUNTING]

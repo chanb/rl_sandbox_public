@@ -35,7 +35,7 @@ def make_summary_writer(save_path, algo, cfg):
 
 def set_seed(seed=None):
     if seed is None:
-        seed = np.random.randint(0, 2 ** 32 - 1)
+        seed = np.random.randint(0, c.MAX_INT)
 
     np.random.seed(seed)
     torch.manual_seed(seed)

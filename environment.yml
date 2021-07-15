@@ -50,6 +50,7 @@ dependencies:
     - protobuf==3.12.2
     - pybullet==2.8.2
     - pycparser==2.20
+    - pygame==2.0.1
     - pyglet==1.5.0
     - pyopengl==3.1.5
     - pyparsing==2.4.7
