@@ -34,6 +34,7 @@ The following is the list of algorithms that this repository currently support:
 - Self-Guided and Self-Regularized Actor-Critic (GRAC): https://arxiv.org/abs/2009.08973
   - NOTE: The implementation is slightly different, please see here for some of our conversations: https://github.com/stanford-iprl-lab/GRAC/issues/1
 - Beyond Target Networks: Improving Deep Q-learning with Functional Regularization: https://arxiv.org/abs/2106.02613
+- Learning Values Across Many Orders of Magnitude (PopArt): https://arxiv.org/abs/1602.07714
 
 ## Replay Buffers
 The following is the list of supported experience replay:
