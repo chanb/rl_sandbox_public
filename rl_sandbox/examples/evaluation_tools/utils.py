@@ -27,8 +27,8 @@ def load_model(seed, config_path, model_path, device, intention=0):
         device = torch.device(device)
 
     buffer_preprocessing = config[c.BUFFER_PREPROCESSING]
-    if config[c.ALGO] in (c.SACX, c.DACX):
-        config[c.INTENTIONS_SETTING][c.KWARGS]['device'] = device
+    if config[c.ALGO] in (c.SACX):
+        config[c.INTENTIONS_SETTING][c.KWARGS][c.DEVICE] = device
         intentions = make_model(config[c.INTENTIONS_SETTING])
         intentions_model = torch.load(model_path, map_location=device.type)[c.INTENTIONS]
         if c.ALGORITHM in intentions_model.keys():
@@ -53,17 +53,8 @@ def load_model(seed, config_path, model_path, device, intention=0):
         if hasattr(model, c.OBS_RMS):
             model.obs_rms = saved_model[c.OBS_RMS]
         
-        if config[c.ALGO] == c.MULTITASK_BC:
-            scheduler = FixedScheduler(intention_i=intention,
-                                       num_tasks=config[c.NUM_TASKS])
-            agent = SACXAgent(scheduler=scheduler,
-                              intentions=model,
-                              learning_algorithm=None,
-                              scheduler_period=c.MAX_INT,
-                              preprocess=config[c.EVALUATION_PREPROCESSING])
-        else:
-            agent = ACAgent(model=model,
-                            learning_algorithm=None,
-                            preprocess=config[c.EVALUATION_PREPROCESSING])
+        agent = ACAgent(model=model,
+                        learning_algorithm=None,
+                        preprocess=config[c.EVALUATION_PREPROCESSING])
 
     return config, env, buffer_preprocessing, agent

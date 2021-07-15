@@ -1,14 +1,14 @@
 """
 Example usage:
 python plot_evaluations.py \
-    --root_dir=manipulator_learning/panda_pick_and_place/play_xyz/results/lift_0/1/ \
-    --variants=multitask_bc,bc,dac,dac-x \
+    --root_dir=./results/hopper/1/ \
+    --variants=bc,dac,sac-x \
     --file_name=train.pkl \
-    --task_i=2 \
+    --task_i=0 \
     --title=test \
-    --recycling=3,3,3,3,3 \
-    --multitasks=1,0,0,1 \
-    --baselines=1,1,0,0
+    --recycling=3,3,3 \
+    --multitasks=0,0,1 \
+    --baselines=1,0,0
 
 """
 
