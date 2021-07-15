@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-# os.environ["MUJOCO_GL"] = "egl"
+os.environ["MUJOCO_GL"] = "egl"
 
 import rl_sandbox.constants as c
 
