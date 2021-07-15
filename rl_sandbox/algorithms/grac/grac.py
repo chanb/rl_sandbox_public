@@ -310,14 +310,17 @@ class GRAC:
         update_info[c.POLICY_UPDATE_TIME].append(timeit.default_timer() - tic)
         update_info[c.PI_LOSS].append(total_pi_loss.numpy())
 
-    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info):
-        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info)
+    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
+        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info, next_obs=next_obs, next_h_state=next_h_state)
 
     def update(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
-        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info)
+        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state)
         self.step += 1
 
         update_info = {}
+
+        if hasattr(self.model, c.OBS_RMS):
+            self.model.obs_rms.update(self.eval_preprocessing(torch.tensor(curr_obs)))
 
         # Perform SAC update
         if self.step >= self._buffer_warmup and self.step % self._steps_between_update == 0:
@@ -344,11 +347,6 @@ class GRAC:
                 
                 obss = self.train_preprocessing(obss)
                 next_obss = self.train_preprocessing(next_obss)
-
-                if hasattr(self.model, c.OBS_RMS):
-                    idxes = lengths.unsqueeze(-1).repeat(1, *obss.shape[2:]).unsqueeze(1)
-                    x_gather = torch.gather(obss, 1, index=idxes - 1)
-                    self.model.obs_rms.update(x_gather.squeeze(1))
                 rews = rews * self._reward_scaling
                 discounting = infos[c.DISCOUNTING]
                 update_info[c.SAMPLE_TIME].append(timeit.default_timer() - tic)

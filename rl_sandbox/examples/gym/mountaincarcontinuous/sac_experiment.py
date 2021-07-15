@@ -38,7 +38,7 @@ experiment_setting = {
     c.BUFFER_PREPROCESSING: gt.AsType(),
     c.BUFFER_SETTING: {
         c.KWARGS: {
-            c.MEMORY_SIZE: 50000 // action_repeat,
+            c.MEMORY_SIZE: 500000 // action_repeat,
             c.OBS_DIM: (obs_dim,),
             c.H_STATE_DIM: (1,),
             c.ACTION_DIM: (action_dim,),
@@ -92,7 +92,7 @@ experiment_setting = {
 
     # Evaluation
     c.EVALUATION_FREQUENCY: 5000,
-    c.EVALUATION_RENDER: False,
+    c.EVALUATION_RENDER: True,
     c.EVALUATION_RETURNS: [],
     c.NUM_EVALUATION_EPISODES: 5,
 
@@ -123,6 +123,7 @@ experiment_setting = {
             c.DEVICE: device,
             c.NORMALIZE_OBS: False,
             c.NORMALIZE_VALUE: False,
+            c.INITIAL_ALPHA: 0.2,
         },
     },
     
@@ -153,8 +154,7 @@ experiment_setting = {
     c.BUFFER_WARMUP: 1000,
     c.EVALUATION_PREPROCESSING: gt.Identity(),
     c.GAMMA: 0.99,
-    c.INITIAL_ALPHA: 1.,
-    c.LEARN_ALPHA: True,
+    c.LEARN_ALPHA: False,
     c.MAX_GRAD_NORM: 1e10,
     c.NUM_GRADIENT_UPDATES: 1,
     c.NUM_PREFETCH: 1,
@@ -176,7 +176,7 @@ experiment_setting = {
     c.SAVE_PATH: f"../results/mountaincarcontinuous/gt-sac-separate/{seed}",
 
     # train parameters
-    c.MAX_TOTAL_STEPS: 50000 // action_repeat,
+    c.MAX_TOTAL_STEPS: 500000 // action_repeat,
     c.TRAIN_RENDER: False,
 }
 

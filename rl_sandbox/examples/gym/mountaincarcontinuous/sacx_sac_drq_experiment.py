@@ -9,7 +9,7 @@ from rl_sandbox.agents.random_agents import UniformContinuousAgent
 from rl_sandbox.buffers.wrappers.torch_buffer import TorchBuffer
 from rl_sandbox.envs.wrappers.action_repeat import ActionRepeatWrapper
 from rl_sandbox.envs.wrappers.frame_stack import FrameStackWrapper
-from rl_sandbox.algorithms.sac_x.schedulers import QTableScheduler
+from rl_sandbox.algorithms.sac_x.schedulers import FixedScheduler, QTableScheduler
 from rl_sandbox.auxiliary_rewards.mountain_car_continuous import MountainCarContinuousAuxiliaryReward
 from rl_sandbox.train.train_sacx_sac_drq import train_sacx_sac_drq
 from rl_sandbox.model_architectures.actor_critics.fully_connected_soft_actor_critic import MultiTaskFullyConnectedSquashedGaussianSAC
@@ -155,14 +155,24 @@ experiment_setting = {
     },
 
     c.SCHEDULER_SETTING: {
-        c.MODEL_ARCHITECTURE: QTableScheduler,
-        c.KWARGS: {
-            c.MAX_SCHEDULE: 4,
-            c.NUM_TASKS: num_tasks,
-            c.TEMPERATURE: 10.,
-            c.TEMPERATURE_DECAY: 0.9999,
-            c.TEMPERATURE_MIN: 1.,
-            c.DEVICE: device,
+        c.TRAIN: {
+            c.MODEL_ARCHITECTURE: QTableScheduler,
+            c.KWARGS: {
+                c.MAX_SCHEDULE: 4,
+                c.NUM_TASKS: num_tasks,
+                c.TEMPERATURE: 10.,
+                c.TEMPERATURE_DECAY: 0.9999,
+                c.TEMPERATURE_MIN: 1.,
+            },
+            c.SCHEDULER_PERIOD: 250,
+        },
+        c.EVALUATION: {
+            c.MODEL_ARCHITECTURE: FixedScheduler,
+            c.KWARGS: {
+                c.INTENTION_I: 0,
+                c.NUM_TASKS: num_tasks,
+            },
+            c.SCHEDULER_PERIOD: c.MAX_INT,
         },
     },
 
@@ -193,7 +203,6 @@ experiment_setting = {
     # SACX
     c.AUXILIARY_REWARDS: aux_reward,
     c.NUM_TASKS: num_tasks,
-    c.SCHEDULER_PERIOD: 250,
     c.SCHEDULER_TAU: 0.4,
 
     # Progress Tracking

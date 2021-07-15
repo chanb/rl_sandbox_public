@@ -1,6 +1,8 @@
 gym==0.17.2
 h5py==2.10.0
+matplotlib==3.2.2
 numpy==1.19.0
 opencv-python==4.3.0.36
+pygame==2.0.1
 tensorboard==2.2.2
 torch==1.5.1

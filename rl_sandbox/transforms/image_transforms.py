@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import torch
 
 from rl_sandbox.transforms.general_transforms import Transform
@@ -37,6 +38,24 @@ class CenterCrop(Transform):
         imgs = imgs.reshape(-1, *self.img_dim)
         n, c, h, w = imgs.shape
         cropped = torch.empty((n, c, self.height, self.width), dtype=imgs.dtype, device=imgs.device)
+        for i, img in enumerate(imgs):
+            cropped[i][:] = img[:, self.top:self.top + self.height, self.left:self.left + self.width]
+        return cropped
+
+
+class NumPyCenterCrop(Transform):
+    def __init__(self, img_dim, height=64, width=64):
+        assert len(img_dim) == 3
+        self.img_dim = img_dim
+        self.height = height
+        self.width = width
+        self.top = (img_dim[1] - height) // 2
+        self.left = (img_dim[2] - width) // 2
+
+    def __call__(self, imgs):
+        imgs = imgs.reshape(-1, *self.img_dim)
+        n, c, h, w = imgs.shape
+        cropped = np.empty((n, c, self.height, self.width), dtype=imgs.dtype)
         for i, img in enumerate(imgs):
             cropped[i][:] = img[:, self.top:self.top + self.height, self.left:self.left + self.width]
         return cropped

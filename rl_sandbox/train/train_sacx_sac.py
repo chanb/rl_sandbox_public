@@ -14,6 +14,7 @@ from rl_sandbox.model_architectures.utils import make_model, make_optimizer
 from rl_sandbox.transforms.general_transforms import Identity
 from rl_sandbox.utils import make_summary_writer, set_seed
 
+
 def train_sacx_sac(experiment_config):
     seed = experiment_config[c.SEED]
     save_path = experiment_config.get(c.SAVE_PATH, None)
@@ -21,12 +22,9 @@ def train_sacx_sac(experiment_config):
 
     set_seed(seed)
     train_env = make_env(experiment_config[c.ENV_SETTING], seed)
-    evaluation_env = None
-    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
-        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
     buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
-
     intentions = make_model(experiment_config[c.INTENTIONS_SETTING])
+
     policy_opt = make_optimizer(intentions.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.INTENTIONS])
     qs_opt = make_optimizer(intentions.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])
     alpha_opt = make_optimizer([intentions.log_alpha], experiment_config[c.OPTIMIZER_SETTING][c.ALPHA])
@@ -45,7 +43,7 @@ def train_sacx_sac(experiment_config):
                                             algo_params=experiment_config,
                                             aux_tasks=aux_tasks)
 
-    scheduler = make_model(experiment_config[c.SCHEDULER_SETTING])
+    scheduler = make_model(experiment_config[c.SCHEDULER_SETTING][c.TRAIN])
     update_scheduler = UpdateQScheduler(model=scheduler,
                                         algo_params=experiment_config)
 
@@ -60,15 +58,20 @@ def train_sacx_sac(experiment_config):
     agent = SACXAgent(scheduler=scheduler,
                       intentions=intentions,
                       learning_algorithm=learning_algorithm,
-                      scheduler_period=experiment_config[c.SCHEDULER_PERIOD],
+                      scheduler_period=experiment_config[c.SCHEDULER_SETTING][c.TRAIN][c.SCHEDULER_PERIOD],
                       preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
-    evaluation_agent = SACXAgent(scheduler=scheduler,
-                                 intentions=intentions,
-                                 learning_algorithm=None,
-                                 scheduler_period=experiment_config[c.SCHEDULER_PERIOD],
-                                 preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
+    evaluation_env = None
+    evaluation_agent = None
+    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
+        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
+        evaluation_agent = SACXAgent(scheduler=make_model(experiment_config[c.SCHEDULER_SETTING][c.EVALUATION]),
+                                     intentions=intentions,
+                                     learning_algorithm=None,
+                                     scheduler_period=experiment_config[c.SCHEDULER_SETTING][c.EVALUATION][c.SCHEDULER_PERIOD],
+                                     preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
 
     summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.SACX, cfg=experiment_config)
+
     train(agent=agent,
           evaluation_agent=evaluation_agent,
           train_env=train_env,

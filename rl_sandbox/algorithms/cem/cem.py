@@ -41,7 +41,6 @@ class CEMQ:
         self.cov_noise_tau = cov_noise_tau
     
     def compute_action(self, q_function, obss, h_states, act_mean, act_var, lengths):
-        # obss, h_states, act_mean, act_var = obss.to(self.device), h_states.to(self.device), act_mean.to(self.device), act_var.to(self.device)
         obss = obss.repeat(*([1] * (len(obss.shape) - 1)), self._pop_size).reshape(self._batch_size * self._pop_size, *obss.shape[1:])
         h_states = h_states.repeat(*([1] * (len(h_states.shape) - 1)), self._pop_size).reshape(self._batch_size * self._pop_size, *h_states.shape[1:])
         if lengths is not None:

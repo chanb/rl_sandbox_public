@@ -24,9 +24,43 @@ class Split(nn.Module):
         return features
 
 
+class Swish(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        x = x * torch.sigmoid(x)
+        return x
+
+
 class Fuse(nn.Module):
     def forward(self, features):
         return torch.cat(features, dim=-1)
+
+
+class ModernBlock(nn.Module):
+    """
+    Reference: https://arxiv.org/abs/2106.01151
+    """
+    def __init__(self,
+                 input_dim,
+                 w1_size,
+                 w2_size,
+                 norm=None):
+        super().__init__()
+        self.input_dim = input_dim
+        self.w1_size = w1_size
+        self.w2_size = w2_size
+        self.fc1 = nn.Linear(input_dim, w1_size)
+        self.fc2 = nn.Linear(w1_size, w2_size)
+
+        if norm == "spectral":
+            self.fc1 = nn.utils.spectral_norm(self.fc1)
+            self.fc2 = nn.utils.spectral_norm(self.fc2)
+        
+
+    def forward(self, x):
+        return x + self.fc2(torch.relu(self.fc1(x)))
 
 
 class Conv2DEncoder(nn.Module):

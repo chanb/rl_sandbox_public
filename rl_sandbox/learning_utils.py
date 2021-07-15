@@ -10,8 +10,8 @@ from pprint import pprint
 
 import rl_sandbox.constants as c
 
+from rl_sandbox.envs.fake_env import FakeEnv
 from rl_sandbox.utils import DummySummaryWriter, EpochSummary
-
 
 def buffer_warmup(agent,
                   env,
@@ -125,6 +125,10 @@ def train(agent,
 
     assert save_path is None or os.path.isdir(save_path)
 
+    num_tasks = experiment_settings.get(c.NUM_TASKS, 1)
+    eps_per_task = int(num_evaluation_episodes / num_tasks)
+    multitask_returns = np.zeros([num_tasks, eps_per_task])
+
     eval = partial(evaluate_policy,
                    agent=evaluation_agent,
                    env=evaluation_env,
@@ -134,12 +138,15 @@ def train(agent,
                    min_action=min_action,
                    max_action=max_action,
                    render=evaluation_render,
-                   auxiliary_reward=auxiliary_reward)
+                   auxiliary_reward=auxiliary_reward,)
 
     # TODO: Just a placeholder. We ideally want an agent sampler.
     exploration_strategy = experiment_settings.get(c.EXPLORATION_STRATEGY, None)
 
     done = False
+    if isinstance(train_env, FakeEnv):
+        auxiliary_reward = lambda reward, **kwargs: np.array([reward])
+
     try:
         returns.append(0)
         cum_episode_lengths.append(cum_episode_lengths[-1])
@@ -174,12 +181,13 @@ def train(agent,
 
             next_obs, reward, done, env_info = train_env.step(env_action)
             next_obs = buffer_preprocess(next_obs)
-            reward = auxiliary_reward(observation=curr_obs,
-                                      action=env_action,
-                                      reward=reward,
-                                      done=done,
-                                      next_observation=next_obs,
-                                      info=env_info)
+
+            reward = np.atleast_1d(auxiliary_reward(observation=curr_obs,
+                                                    action=env_action,
+                                                    reward=reward,
+                                                    done=done,
+                                                    next_observation=next_obs,
+                                                    info=env_info))
 
             info = dict()
             info[c.DISCOUNTING] = env_info.get(c.DISCOUNTING, np.array([1]))
@@ -238,26 +246,35 @@ def train(agent,
                 returns.append(0)
                 cum_episode_lengths.append(cum_episode_lengths[-1])
                 curr_episode += 1
-                        
-            if evaluation_frequency > 0 and (timestep_i + 1) % evaluation_frequency == 0:
-                evaluation_returns.append(eval())
-                epoch_summary.log(f"{c.EVALUATION_INFO}/{c.AVERAGE_RETURNS}", evaluation_returns[-1], axis=(0, 2))
 
+            curr_timestep = timestep_i + 1
+            if evaluation_frequency > 0 and curr_timestep % evaluation_frequency == 0:
+                evaluation_returns.append(eval())
                 for task_i, task_i_ret in enumerate(evaluation_returns[-1]):
+                    rets_slice = slice(task_i * eps_per_task, task_i * eps_per_task + eps_per_task)
+                    task_i_ret = task_i_ret[rets_slice]
+
                     summary_writer.add_scalar(
                         f"{c.EVALUATION_INFO}/task_{task_i}/{c.AVERAGE_RETURNS}", np.mean(task_i_ret), timestep_i)
+                    multitask_returns[task_i] = task_i_ret
 
-            if (timestep_i + 1) % print_interval == 0:
+                epoch_summary.log(f"{c.EVALUATION_INFO}/{c.AVERAGE_RETURNS}", multitask_returns, axis=(0, 2))
+
+            if curr_timestep % print_interval == 0:
                 epoch_summary.print_summary()
                 epoch_summary.new_epoch()
 
-            if save_path is not None and (timestep_i + 1) % save_interval == 0:
-                curr_save_path = f"{save_path}/{num_updates}.pt"
+            if save_path is not None and curr_timestep % save_interval == 0:
+                curr_save_path = f"{save_path}/{timestep_i}.pt"
                 print(f"Saving model to {curr_save_path}")
                 torch.save(agent.learning_algorithm.state_dict(), curr_save_path)
                 pickle.dump({c.RETURNS: returns if done else returns[:-1],
                              c.CUM_EPISODE_LENGTHS: cum_episode_lengths if done else cum_episode_lengths[:-1],
-                             c.EVALUATION_RETURNS: evaluation_returns}, open(f'{save_path}/{c.TRAIN_FILE}', 'wb'))
+                             c.EVALUATION_RETURNS: evaluation_returns,},
+                            open(f'{save_path}/{c.TRAIN_FILE}', 'wb'))
+                if hasattr(agent, c.LEARNING_ALGORITHM) and hasattr(agent.learning_algorithm, c.BUFFER):
+                    if save_path is not None:
+                        agent.learning_algorithm.buffer.save(f"{save_path}/{c.TERMINATION_BUFFER_FILE}")
     finally:
         if save_path is not None:
             torch.save(agent.learning_algorithm.state_dict(),
@@ -270,8 +287,10 @@ def train(agent,
                     c.EVALUATION_RETURNS: evaluation_returns},
                 open(f'{save_path}/{c.TERMINATION_TRAIN_FILE}', 'wb')
             )
-            agent.learning_algorithm.buffer.save(f"{save_path}/{c.TERMINATION_BUFFER_FILE}")
-        agent.learning_algorithm.buffer.close()
+        if hasattr(agent, c.LEARNING_ALGORITHM) and hasattr(agent.learning_algorithm, c.BUFFER):
+            if save_path is not None:
+                agent.learning_algorithm.buffer.save(f"{save_path}/{c.TERMINATION_BUFFER_FILE}")
+            agent.learning_algorithm.buffer.close()
     toc = timeit.default_timer()
     print(f"Training took: {toc - tic}s")
 
@@ -286,7 +305,6 @@ def evaluate_policy(agent,
                     render,
                     auxiliary_reward=lambda reward, **kwargs: np.array([reward]),
                     verbose=False):
-    # import time
     eval_returns = []
     for _ in range(num_episodes):
         eval_returns.append(0)
@@ -307,12 +325,12 @@ def evaluate_policy(agent,
             next_obs, reward, done, env_info = env.step(action)
             next_obs = buffer_preprocess(next_obs)
 
-            eval_returns[-1] += auxiliary_reward(observation=curr_obs,
-                                                 action=action,
-                                                 reward=reward,
-                                                 done=done,
-                                                 next_observation=next_obs,
-                                                 info=env_info)
+            eval_returns[-1] += np.atleast_1d(auxiliary_reward(observation=curr_obs,
+                                                               action=action,
+                                                               reward=reward,
+                                                               done=done,
+                                                               next_observation=next_obs,
+                                                               info=env_info))
             curr_obs = next_obs
         
         if verbose:

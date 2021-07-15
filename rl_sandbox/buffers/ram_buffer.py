@@ -9,7 +9,6 @@ from collections import deque
 from rl_sandbox.buffers.buffer import (
     Buffer,
     CheckpointIndexError,
-    LengthMismatchError,
     NoSampleError
 )
 import rl_sandbox.constants as c
@@ -147,8 +146,6 @@ class NumPyBuffer(Buffer):
         self._count = 0
         self._checkpoint_idxes.fill(1)
         if self.burn_in_window > 0:
-            self.historic_observations.fill(0.)
-            self.historic_hidden_states.fill(0.)
             self.historic_dones.fill(1)
 
     def _get_burn_in_window(self, idxes):
@@ -272,6 +269,7 @@ class NumPyBuffer(Buffer):
         else:
             random_ending_idx = self.rng.randint(batch_size, len(self) + 1)
 
+        assert random_ending_idx - batch_size >= 0
         idxes = np.arange(random_ending_idx - batch_size, random_ending_idx)
         obss, h_states, acts, rews, dones, infos, lengths = self.get_transitions(idxes)
         
@@ -501,8 +499,3 @@ class NextStateNumPyBuffer(NumPyBuffer):
 
         for k, v in self.infos.items():
             self.infos[k][:count] = data[c.INFOS][k][-count:]
-
-
-class TrajectoryNumPyBuffer(NumPyBuffer):
-    """ This buffer stores one trajectory as a sample
-    """

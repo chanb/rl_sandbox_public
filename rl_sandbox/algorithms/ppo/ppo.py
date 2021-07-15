@@ -76,7 +76,7 @@ class PPO:
         return state_dict
 
     def load_state_dict(self, state_dict):
-        self._model.load_state_dict(state_dict[c.STATE_DICT])
+        self.model.load_state_dict(state_dict[c.STATE_DICT])
         self._optimizer.load_state_dict(state_dict[c.OPTIMIZER])
         self._aux_tasks.load_state_dict(state_dict[c.AUXILIARY_TASKS])
         if hasattr(self.model, c.OBS_RMS) and c.OBS_RMS in state_dict:
@@ -247,6 +247,5 @@ class PPO:
 
                     update_info.update(aux_update_info)
 
-            self.buffer.clear()
             return True, update_info
         return False, update_info

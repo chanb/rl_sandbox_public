@@ -93,7 +93,7 @@ class AlgaeDICE:
         return state_dict
 
     def load_state_dict(self, state_dict):
-        self._model.load_state_dict(state_dict[c.STATE_DICT])
+        self.model.load_state_dict(state_dict[c.STATE_DICT])
         self.policy_opt.load_state_dict(state_dict[c.POLICY_OPTIMIZER])
         self.qs_opt.load_state_dict(state_dict[c.QS_OPTIMIZER])
         self.alpha_opt.load_state_dict(state_dict[c.ALPHA_OPTIMIZER])
@@ -113,6 +113,9 @@ class AlgaeDICE:
         for (param, target_param) in zip(self.model.soft_update_parameters, self._target_model.soft_update_parameters):
             target_param.data.mul_(1. - self._tau)
             target_param.data.add_(param.data * self._tau)
+
+        if hasattr(self.model, c.OBS_RMS):
+            self._target_model.obs_rms = copy.deepcopy(self.model.obs_rms)
 
     def _critic_mix(self, obss, h_states, targ_h_states, acts):
         min_q_targ, _, _, _ = self._target_model.q_vals(obss, targ_h_states, acts)
@@ -256,14 +259,17 @@ class AlgaeDICE:
         update_info[c.ALPHA_UPDATE_TIME].append(timeit.default_timer() - tic)
         update_info[c.ALPHA_LOSS].append(total_alpha_loss.numpy())
 
-    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info):
-        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info)
+    def _store_to_buffer(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
+        self.buffer.push(curr_obs, curr_h_state, act, rew, [done], info, next_obs=next_obs, next_h_state=next_h_state)
 
     def update(self, curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state):
-        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info)
+        self._store_to_buffer(curr_obs, curr_h_state, act, rew, done, info, next_obs, next_h_state)
         self.step += 1
 
         update_info = {}
+
+        if hasattr(self.model, c.OBS_RMS):
+            self.model.obs_rms.update(self.eval_preprocessing(torch.tensor(curr_obs)))
 
         # Perform SAC update
         if self.step >= self._buffer_warmup and self.step % self._steps_between_update == 0:
@@ -288,8 +294,6 @@ class AlgaeDICE:
                 next_obss = self.train_preprocessing(next_obss)
                 init_obss = self.train_preprocessing(init_obss)
 
-                if hasattr(self.model, c.OBS_RMS):
-                    self.model.obs_rms.update(obss)
                 rews = rews * self._reward_scaling
                 discounting = infos[c.DISCOUNTING]
                 update_info[c.SAMPLE_TIME].append(timeit.default_timer() - tic)

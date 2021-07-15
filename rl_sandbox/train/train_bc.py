@@ -2,10 +2,10 @@ import torch
 
 import rl_sandbox.constants as c
 
-from rl_sandbox.algorithms.sac.sac_per import SACPER
+from rl_sandbox.algorithms.bc.bc import BC
 from rl_sandbox.auxiliary_tasks.utils import make_auxiliary_tasks
 from rl_sandbox.buffers.utils import make_buffer
-from rl_sandbox.buffers.wrappers.torch_buffer import TorchPrioritizedExperienceReplay
+from rl_sandbox.envs.fake_env import FakeEnv
 from rl_sandbox.envs.utils import make_env
 from rl_sandbox.learning_utils import train
 from rl_sandbox.model_architectures.utils import make_model, make_optimizer
@@ -13,35 +13,27 @@ from rl_sandbox.agents.rl_agents import ACAgent
 from rl_sandbox.transforms.general_transforms import Identity
 from rl_sandbox.utils import make_summary_writer, set_seed
 
-def train_sac_per(experiment_config):
+def train_bc(experiment_config):
     seed = experiment_config[c.SEED]
     save_path = experiment_config.get(c.SAVE_PATH, None)
     buffer_preprocessing = experiment_config.get(c.BUFFER_PREPROCESSING, Identity())
 
     set_seed(seed)
-    train_env = make_env(experiment_config[c.ENV_SETTING], seed)
+    train_env = FakeEnv(obs_dim=experiment_config[c.OBS_DIM])
     model = make_model(experiment_config[c.MODEL_SETTING])
-    buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
-
-    assert isinstance(buffer, TorchPrioritizedExperienceReplay)
-
-    policy_opt = make_optimizer(model.policy_parameters, experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
-    qs_opt = make_optimizer(model.qs_parameters, experiment_config[c.OPTIMIZER_SETTING][c.QS])
-    alpha_opt = make_optimizer([model.log_alpha], experiment_config[c.OPTIMIZER_SETTING][c.ALPHA])
+    expert_buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
+    optimizer = make_optimizer(model.parameters(), experiment_config[c.OPTIMIZER_SETTING][c.POLICY])
 
     aux_tasks = make_auxiliary_tasks(experiment_config[c.AUXILIARY_TASKS],
                                      model,
-                                     buffer,
+                                     expert_buffer,
                                      experiment_config)
-    
-    learning_algorithm = SACPER(model=model,
-                                policy_opt=policy_opt,
-                                qs_opt=qs_opt,
-                                alpha_opt=alpha_opt,
-                                learn_alpha=experiment_config[c.LEARN_ALPHA],
-                                buffer=buffer,
-                                algo_params=experiment_config,
-                                aux_tasks=aux_tasks)
+
+    learning_algorithm = BC(model=model,
+                            optimizer=optimizer,
+                            expert_buffer=expert_buffer,
+                            algo_params=experiment_config,
+                            aux_tasks=aux_tasks)
 
     load_model = experiment_config.get(c.LOAD_MODEL, False)
     if load_model:
@@ -58,7 +50,7 @@ def train_sac_per(experiment_config):
                                    learning_algorithm=None,
                                    preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
 
-    summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.SAC_PER, cfg=experiment_config)
+    summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.BC, cfg=experiment_config)
     train(agent=agent,
           evaluation_agent=evaluation_agent,
           train_env=train_env,

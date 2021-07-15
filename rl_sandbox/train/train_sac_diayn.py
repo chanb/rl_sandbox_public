@@ -21,9 +21,6 @@ def train_sac_diayn(experiment_config):
 
     set_seed(seed)
     train_env = make_env(experiment_config[c.ENV_SETTING], seed)
-    evaluation_env = None
-    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
-        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
     model = make_model(experiment_config[c.MODEL_SETTING])
     discriminator = make_model(experiment_config[c.DISCRIMINATOR_SETTING])
     prior = experiment_config[c.PRIOR]
@@ -62,10 +59,14 @@ def train_sac_diayn(experiment_config):
                        model=model,
                        learning_algorithm=diayn,
                        preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
-    evaluation_agent = DIAYNAgent(prior=prior,
-                                  model=model,
-                                  learning_algorithm=None,
-                                  preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
+    evaluation_env = None
+    evaluation_agent = None
+    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
+        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
+        evaluation_agent = DIAYNAgent(prior=prior,
+                                      model=model,
+                                      learning_algorithm=None,
+                                      preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
 
     class GetTask:
         def __init__(self, agent):

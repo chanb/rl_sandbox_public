@@ -48,12 +48,10 @@ class UpdateSACIntentions(SAC):
             min_q_targ = torch.gather(min_q_targ, dim=1, index=tasks)
             min_q_targ = min_q_targ.detach()
 
-            v_next = (min_q_targ - alpha * next_lprobs)
-
             if hasattr(self.model, c.VALUE_RMS):
-                v_next = v_next.reshape(batch_size, self._num_tasks).cpu()
-                v_next = self.model.value_rms.unnormalize(v_next)
-                v_next = v_next.to(self.device).reshape(task_batch_size, 1)
+                min_q_targ = self.model.value_rms.unnormalize(min_q_targ.cpu()).to(self.device)
+
+            v_next = (min_q_targ - alpha * next_lprobs)
 
             target = rews + (self._gamma ** discounting) * (1 - dones) * v_next
 

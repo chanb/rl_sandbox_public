@@ -20,7 +20,6 @@ def train_sac_pt(experiment_config):
 
     set_seed(seed)
     train_env = make_env(experiment_config[c.ENV_SETTING], seed)
-    evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
     model = make_model(experiment_config[c.MODEL_SETTING])
     buffer = make_buffer(experiment_config[c.BUFFER_SETTING], seed, experiment_config[c.BUFFER_SETTING].get(c.LOAD_BUFFER, False))
 
@@ -51,11 +50,15 @@ def train_sac_pt(experiment_config):
     agent = ACAgent(model=model,
                     learning_algorithm=learning_algorithm,
                     preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
-    evaluation_agent = ACAgent(model=model,
-                               learning_algorithm=None,
-                               preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
 
     summary_writer, save_path = make_summary_writer(save_path=save_path, algo=c.SAC_PT, cfg=experiment_config)
+    evaluation_env = None
+    evaluation_agent = None
+    if experiment_config.get(c.EVALUATION_FREQUENCY, 0):
+        evaluation_env = make_env(experiment_config[c.ENV_SETTING], seed + 1)
+        evaluation_agent = ACAgent(model=model,
+                                   learning_algorithm=None,
+                                   preprocess=experiment_config[c.EVALUATION_PREPROCESSING])
     train(agent=agent,
           evaluation_agent=evaluation_agent,
           train_env=train_env,

@@ -128,7 +128,7 @@ class DAC:
         discriminator_update_info = {}
         if self.learning_algorithm.step >= self.learning_algorithm._buffer_warmup:
             discriminator_update_info  = self.update_discriminator()
-        updated, update_info = self.learning_algorithm.update(self.discriminator, next_obs, next_h_state)
+        updated, update_info = self.learning_algorithm.update(curr_obs, self.discriminator, next_obs, next_h_state)
 
         update_info.update(discriminator_update_info)
 
