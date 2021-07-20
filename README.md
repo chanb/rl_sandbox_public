@@ -55,8 +55,6 @@ python ppo_experiment.py --seed=1
 
 This will generate a `results/mujoco/hopper-v2/gt-ppo` directory under `gym` directory. It keeps track of the experiment configuration, learning progress, and policies.
 
-**NOTE:** For image based tasks, only DrQ is currently able to achieve performance similar to gt observations with same data efficiency.
-
 ## Supported Environments
 - Standard Gym Environments: https://github.com/openai/gym
 - DeepMind Control Suite: https://github.com/deepmind/dm_control
