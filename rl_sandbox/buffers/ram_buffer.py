@@ -151,35 +151,38 @@ class NumPyBuffer(Buffer):
     def _get_burn_in_window(self, idxes):
         historic_observations = np.zeros((len(idxes), self.burn_in_window, *self.observations.shape[1:]))
         historic_hidden_states = np.zeros((len(idxes), self.burn_in_window, *self.hidden_states.shape[1:]))
-        not_dones = np.ones(len(idxes), dtype=np.bool)
+        not_dones = np.ones((len(idxes), self.burn_in_window), dtype=np.bool)
         lengths = np.zeros(len(idxes), dtype=np.int)
 
-        for ii in range(1, self.burn_in_window + 1):
-            shifted_idxes = (idxes - self._pointer) % len(self) - ii
+        shifted_idxes = ((idxes - self._pointer) % len(self) - np.arange(self.burn_in_window, 0, -1)[:, None]).T
+        cyclic_idxes = (idxes - np.arange(self.burn_in_window, 0, -1)[:, None]).T
+        
+        # Determine which index needs to look into historic buffer
+        historic_idxes = np.logical_and(shifted_idxes >= -self.burn_in_window, shifted_idxes < 0).astype(np.int)
+        non_historic_idxes = 1 - historic_idxes
+        
+        # Check whether we have reached another episode
+        not_dones[np.where(self.dones[cyclic_idxes, 0] * non_historic_idxes)] = 0
+        not_dones[np.where(self.historic_dones[shifted_idxes * historic_idxes, 0] * historic_idxes)] = 0
 
-            # Determine which index needs to look into historic buffer
-            historic_idxes = (self._count > self._memory_size) * np.logical_and(shifted_idxes >= -self.burn_in_window, shifted_idxes < 0).astype(np.int)
-            non_historic_idxes = 1 - historic_idxes
+        lengths = np.argmin(np.flip(not_dones, axis=1), axis=1) + np.all(not_dones, axis=1) * self.burn_in_window
+        take_mask = np.concatenate((np.zeros((1, self.burn_in_window), dtype=np.int), np.eye(self.burn_in_window)), axis=0)[lengths]
+        np.cumsum(np.flip(take_mask, axis=1), axis=1, out=take_mask)
+        
+        non_historic_take_mask = np.where(take_mask * non_historic_idxes)
+        non_historic_cyclic_idxes = cyclic_idxes[non_historic_take_mask]
+        historic_take_mask = np.where(take_mask * historic_idxes)
+        historic_cyclic_idxes = cyclic_idxes[historic_take_mask]
 
-            # Check whether we have reached another episode
-            not_dones[np.where(self.dones[idxes - ii, 0] * non_historic_idxes)] = 0
-            not_dones[np.where(self.historic_dones[shifted_idxes * historic_idxes, 0] * historic_idxes)] = 0
-            if self._count <= self._memory_size:
-                not_dones[np.where(idxes - ii < 0)] = 0
+        # Update for transitions not looking into historic buffer
+        historic_observations[non_historic_take_mask] = self.observations[non_historic_cyclic_idxes]
+        historic_hidden_states[non_historic_take_mask] = self.hidden_states[non_historic_cyclic_idxes]
 
-            non_historic_not_dones = not_dones * non_historic_idxes
-            historic_not_dones = not_dones * historic_idxes
+        # Update for transitions looking into historic buffer
+        if self._count > self._memory_size:
+            historic_observations[historic_take_mask] = self.observations[historic_cyclic_idxes]
+            historic_hidden_states[historic_take_mask] = self.hidden_states[historic_cyclic_idxes]
 
-            # Update for transitions not looking into historic buffer
-            historic_observations[:, -ii] += self.observations[idxes - ii] * non_historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
-            historic_hidden_states[:, -ii] += self.hidden_states[idxes - ii] * non_historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
-            lengths += 1 * non_historic_not_dones
-
-            # Update for transitions looking into historic buffer
-            if self._count > self._memory_size:
-                historic_observations[:, -ii] += self.historic_observations[shifted_idxes * historic_not_dones] * historic_not_dones.reshape((-1, *([1] * len(historic_observations.shape[2:]))))
-                historic_hidden_states[:, -ii] += self.historic_hidden_states[shifted_idxes * historic_not_dones] * historic_not_dones.reshape((-1, *([1] * len(historic_hidden_states.shape[2:]))))
-                lengths += 1 * historic_not_dones
         return historic_observations, historic_hidden_states, lengths
 
     def get_transitions(self, idxes):
